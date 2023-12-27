@@ -50,4 +50,19 @@ class RegisteredUserController extends Controller
 
         return redirect(RouteServiceProvider::HOME);
     }
+
+    /**
+     * Check if the username is available.
+     */
+    public function checkUsername(Request $request)
+    {
+        // return json response
+
+        return response()->json([
+            'available' => !User::where('username', $request->username)->exists(),
+        ]);
+
+
+        // return !User::where('username', $request->username)->exists();
+    }
 }
