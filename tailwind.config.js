@@ -14,7 +14,11 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ["Figtree", ...defaultTheme.fontFamily.sans],
+                sans: ["poppins", ...defaultTheme.fontFamily.sans],
+            },
+            colors: {
+                primaryLight: "#f5f6f8",
+                primaryDark: "#1d2127",
             },
         },
     },
