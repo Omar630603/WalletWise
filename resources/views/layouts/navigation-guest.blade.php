@@ -53,7 +53,7 @@
     @if (Route::has('register'))
 
     <a class="hidden lg:inline-block py-2 px-6 bg-blue-500 hover:bg-blue-600 text-sm text-white font-bold rounded-xl transition duration-200"
-        href="{{ route('register') }}">Sign up</a>
+        href="{{ route('register') }}">Sign Up</a>
     @endif
     @endauth
     @endif

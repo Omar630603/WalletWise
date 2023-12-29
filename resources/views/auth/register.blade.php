@@ -7,23 +7,27 @@
             <span
                 class="font-semibold text-primaryDark dark:text-primaryLight text-2xl my-4">{{ config('app.name') }}</span>
             <span class="text-gray-900 dark:text-gray-100 text-xl mx-4 text-center">
-                {{config('app.description')}}
+                {{config('app.description.0')}}
             </span>
             <div
-                class="w-20 h-40 bg-primaryDark dark:bg-primaryLight rounded-tl-full rounded-bl-full absolute top-0 right-0 mt-8">
+                class="w-20 h-40 bg-primaryDark dark:bg-primaryLight rounded-tl-full rounded-bl-full absolute top-0 right-0 mt-8 hover:w-80 transition-all ease-in-out 
+                flex justify-center items-center text-center text-transparent hover:text-gray-100 hover:dark:text-gray-900 px-4 text-lg">
+                {{config('app.description.1')}}
             </div>
             <div
-                class="w-20 h-40 bg-primaryDark dark:bg-primaryLight rounded-tr-full rounded-br-full absolute bottom-0 left-0 mb-8">
+                class="w-20 h-40 bg-primaryDark dark:bg-primaryLight rounded-tr-full rounded-br-full absolute bottom-0 left-0 mb-8 hover:w-80 transition-all ease-in-out 
+                flex justify-center items-center text-center text-transparent hover:text-gray-100 hover:dark:text-gray-900 px-4 text-lg">
+                {{config('app.description.2')}}
             </div>
         </div>
         <div class="flex flex-col justify-center items-center">
-            <div class="flex flex-col justify-center items-start">
-                <span
-                    class="font-semibold text-primaryDark dark:text-primaryLight text-2xl mb-4">{{ __('Register') }}</span>
-                <span
-                    class="text-gray-900 dark:text-gray-100 text-xl mb-4">{{ __('Please register to continue') }}</span>
-            </div>
             <form method="POST" action="{{ route('register') }}">
+                <div class="flex flex-col justify-center items-start mb-4">
+                    <span
+                        class="font-semibold text-primaryDark dark:text-primaryLight text-2xl mb-4">{{ __('Sign Up') }}</span>
+                    <span
+                        class="text-gray-900 dark:text-gray-100 text-xl mb-4">{{ __('Please sign up to continue') }}</span>
+                </div>
                 @csrf
                 <div>
                     <x-input-label for="name" :value="__('Name')" />
@@ -65,13 +69,13 @@
 
                     <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
                 </div>
-                <div class="flex items-center justify-end mt-4">
-                    <a class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800"
+                <div class="flex items-center justify-end mt-4 gap-5">
+                    <a class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800"
                         href="{{ route('login') }}">
                         {{ __('Already registered?') }}
                     </a>
                     <x-primary-button class="ms-4">
-                        {{ __('Register') }}
+                        {{ __('Sign Up') }}
                     </x-primary-button>
                 </div>
             </form>

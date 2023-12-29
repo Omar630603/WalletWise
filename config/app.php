@@ -17,7 +17,11 @@ return [
     */
 
     'name' => env('APP_NAME', 'Laravel'),
-    'description' => 'Save your transactions and get a report of your expenses',
+    'description' => [
+        '0' => 'Save your transactions and get a report of your expenses',
+        '1' => 'Create wallets and manage your expenses',
+        '2' => 'Track your spending and save more',
+    ],
 
     /*
     |--------------------------------------------------------------------------
