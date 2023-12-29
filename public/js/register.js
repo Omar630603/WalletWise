@@ -1,5 +1,3 @@
-// check if the username is valid and available
-
 $(document).ready(function () {
     $("#username").blur(function () {
         var username = $(this).val();
@@ -15,7 +13,11 @@ $(document).ready(function () {
                 data: { username: username },
                 success: function (data) {
                     if (data.available) {
+                        $("#usernameCheckCorrect").show();
+                        $("#usernameCheckWrong").hide();
                     } else {
+                        $("#usernameCheckCorrect").hide();
+                        $("#usernameCheckWrong").show();
                     }
                 },
             });
