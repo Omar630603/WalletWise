@@ -20,8 +20,8 @@
                 {{config('app.description.2')}}
             </div>
         </div>
-        <div class="flex flex-col justify-center items-center">
-            <form method="POST" action="{{ route('login') }}">
+        <div class="flex flex-col justify-center items-center mx-10 lg:mx-16">
+            <form method="POST" action="{{ route('login') }}" class="w-full">
                 <div class="flex flex-col justify-center items-start mb-4">
                     <span
                         class="font-semibold text-primaryDark dark:text-primaryLight text-2xl mb-4">{{ __('Sign In') }}</span>
@@ -62,7 +62,7 @@
                 <div class="flex items-center justify-between mt-8 gap-5">
                     <a class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800"
                         href="{{ route('register') }}">
-                        {{ __('Do not have an account?') }}
+                        {{ __('Create new account?') }}
                     </a>
 
                     <x-primary-button class="ms-3">
@@ -70,7 +70,11 @@
                     </x-primary-button>
                 </div>
             </form>
-            <div>
+            <x-primary-button class="mt-10 flex gap-5 items-center justify-between w-full">
+                {{ __('Sign in with Google') }}
+                <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" alt="">
+            </x-primary-button>
+            <div class="mt-4">
                 <x-auth-session-status class="mb-4" :status="session('status')" />
             </div>
         </div>

@@ -52,7 +52,7 @@
         href="{{ route('login') }}">Sign In</a>
     @if (Route::has('register'))
 
-    <a class="hidden lg:inline-block py-2 px-6 bg-blue-500 hover:bg-blue-600 text-sm text-white font-bold rounded-xl transition duration-200"
+    <a class="hidden lg:inline-block py-2 px-6 bg-primaryDark hover:bg-gray-900 text-sm text-white font-bold rounded-xl transition duration-200"
         href="{{ route('register') }}">Sign Up</a>
     @endif
     @endauth
@@ -112,7 +112,7 @@
                     href="{{ route('login') }}">Sign in</a>
                 @if (Route::has('register'))
 
-                <a class="block px-4 py-3 mb-2 leading-loose text-xs text-center text-white font-semibold bg-blue-600 hover:bg-blue-700  rounded-xl"
+                <a class="block px-4 py-3 mb-2 leading-loose text-xs text-center text-white font-semibold bg-primaryDark hover:bg-gray-900  rounded-xl"
                     href="{{ route('register') }}">Sign Up</a>
                 @endif
                 @endauth
