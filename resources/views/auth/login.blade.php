@@ -70,7 +70,7 @@
                     </x-primary-button>
                 </div>
             </form>
-            <x-primary-button class="mt-10 flex gap-5 items-center justify-between w-full">
+            <x-primary-button class="mt-10 flex gap-5 items-center justify-between w-full" id="googleBTN">
                 {{ __('Sign in with Google') }}
                 <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" alt="">
             </x-primary-button>
@@ -79,4 +79,9 @@
             </div>
         </div>
     </div>
+    <script>
+        document.getElementById("googleBTN").addEventListener("click", () => {
+            window.location.href = "{{ route('auth.google') }}";
+        });
+    </script>
 </x-guest-layout>

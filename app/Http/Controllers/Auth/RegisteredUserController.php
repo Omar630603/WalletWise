@@ -54,15 +54,33 @@ class RegisteredUserController extends Controller
     /**
      * Check if the username is available.
      */
-    public function checkUsername(Request $request)
+    public function checkUsernameOrEmail(Request $request)
     {
-        // return json response
-
-        return response()->json([
-            'available' => !User::where('username', $request->username)->exists(),
-        ]);
-
-
-        // return !User::where('username', $request->username)->exists();
+        if ($request->has('email')) {
+            try {
+                $request->validate([
+                    'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
+                ]);
+                return response()->json([
+                    'available' => true,
+                ]);
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                return response()->json([
+                    'available' => false,
+                ]);
+            }
+        }
+        try {
+            $request->validate([
+                'username' => ['required', 'alpha_dash', 'max:32', 'unique:' . User::class],
+            ]);
+            return response()->json([
+                'available' => true,
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'available' => false,
+            ]);
+        }
     }
 }

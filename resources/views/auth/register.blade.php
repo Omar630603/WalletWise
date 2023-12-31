@@ -45,28 +45,26 @@
                     </div>
                     <x-input-error :messages="$errors->get('username')" class="mt-2" />
                 </div>
-                <div class="mt-4">
+                <div class="mt-4 ">
                     <x-input-label for="email" :value="__('Email')" />
-                    <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')"
-                        required autocomplete="username" />
-                    <x-checkmark id="emailCheckCorrect" color="text-green-500 dark:text-green-300" />
-                    <x-xmark id="emailCheckWrong" color="text-red-500 dark:text-red-300" />
+                    <div class="relative">
+                        <x-text-input id="email" class="block mt-1 w-full" type="email" name="email"
+                            :value="old('email')" required autocomplete="username" />
+                        <x-checkmark id="emailCheckCorrect" color="text-green-500 dark:text-green-300" />
+                        <x-xmark id="emailCheckWrong" color="text-red-500 dark:text-red-300" />
+                    </div>
                     <x-input-error :messages="$errors->get('email')" class="mt-2" />
                 </div>
                 <div class="mt-4">
                     <x-input-label for="password" :value="__('Password')" />
-
                     <x-text-input id="password" class="block mt-1 w-full" type="password" name="password" required
                         autocomplete="new-password" />
-
                     <x-input-error :messages="$errors->get('password')" class="mt-2" />
                 </div>
                 <div class="mt-4">
                     <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
-
                     <x-text-input id="password_confirmation" class="block mt-1 w-full" type="password"
                         name="password_confirmation" required autocomplete="new-password" />
-
                     <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
                 </div>
                 <div class="flex items-center justify-between mt-4 gap-5">
@@ -79,7 +77,7 @@
                     </x-primary-button>
                 </div>
             </form>
-            <x-primary-button class="mt-10 flex gap-5 items-center justify-between w-full">
+            <x-primary-button class="mt-10 flex gap-5 items-center justify-between w-full" id="googleBTN">
                 {{ __('Sign up with Google') }}
                 <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" alt="">
             </x-primary-button>
