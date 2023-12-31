@@ -51,6 +51,6 @@ $(document).ready(function () {
 
     const googleBTN = document.getElementById("googleBTN");
     googleBTN.addEventListener("click", () => {
-        window.location.href = "{{ route('auth.google') }}";
+        window.location.href = "/auth/google/redirect";
     });
 });

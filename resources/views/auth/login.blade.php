@@ -81,7 +81,7 @@
     </div>
     <script>
         document.getElementById("googleBTN").addEventListener("click", () => {
-            window.location.href = "{{ route('auth.google') }}";
+            window.location.href = "/auth/google/redirect";
         });
     </script>
 </x-guest-layout>

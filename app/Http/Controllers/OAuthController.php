@@ -8,18 +8,18 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Nette\Utils\Random;
 
-class GoogleController extends Controller
+class OAuthController extends Controller
 {
-    public function redirectToGoogle()
+    public function redirectToProvider($provider)
     {
-        return Socialite::driver('google')->redirect();
+        return Socialite::driver($provider)->redirect();
     }
 
-    public function handleGoogleCallback()
+    public function handleProviderCallback($provider)
     {
         try {
-            $user = Socialite::driver('google')->user();
-            $find_user = User::where('google_id', $user->id)->first();
+            $user = Socialite::driver($provider)->user();
+            $find_user = User::where($provider . '_id', $user->id)->first();
             if ($find_user) {
                 Auth::login($find_user);
                 return redirect()->intended('dashboard');
@@ -28,7 +28,7 @@ class GoogleController extends Controller
                 // TODO: save the user's avatar using media library
                 $new_user = User::updateOrCreate(['email' => $user->email], [
                     'name' => $user->name,
-                    'google_id' => $user->id,
+                    $provider . '_id' => $user->id,
                     'password' => encrypt(Random::generate(16)),
                 ]);
                 Auth::login($new_user);

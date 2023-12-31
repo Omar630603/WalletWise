@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\GoogleController;
+use App\Http\Controllers\OAuthController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -31,9 +31,9 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::controller(GoogleController::class)->group(function () {
-    Route::get('auth/google', 'redirectToGoogle')->name('auth.google');
-    Route::get('auth/google/callback', 'handleGoogleCallback');
+Route::controller(OAuthController::class)->group(function () {
+    Route::get('auth/{provider}/redirect', 'redirectToProvider')->name('auth.provider.redirect');
+    Route::get('auth/{provider}/callback', 'handleProviderCallback')->name('auth.provider.callback');
 });
 
 Route::middleware('auth')->group(function () {
