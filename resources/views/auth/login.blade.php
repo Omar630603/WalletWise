@@ -30,12 +30,12 @@
                 </div>
                 @csrf
                 <div>
-                    <x-input-label for="email" :value="__('Email or Username')" />
+                    <x-input-label for="login" :value="__('Email or Username')" />
 
-                    <x-text-input id="email" class="block mt-1 w-full" type="text" name="email" :value="old('email')"
+                    <x-text-input id="login" class="block mt-1 w-full" type="text" name="login" :value="old('login')"
                         required autofocus />
 
-                    <x-input-error :messages="$errors->get('email')" class="mt-2" />
+                    <x-input-error :messages="$errors->get('login')" class="mt-2" />
                 </div>
                 <div class="mt-4">
                     <x-input-label for="password" :value="__('Password')" />
