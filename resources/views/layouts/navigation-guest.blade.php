@@ -41,11 +41,10 @@
         <li><a class="text-sm {{ $currentRoute == 'contact' ? $active : $inactive }}"
                 href="{{route('contact')}}">Contact Us</a></li>
     </ul>
-    @if(!Auth::check())
     @if(Route::current()->getName() != 'login' && Route::current()->getName() != 'register')
     @if (Route::has('login'))
     @auth
-    <a class="hidden lg:inline-block py-2 px-6 bg-blue-500 hover:bg-blue-600 text-sm text-white font-bold rounded-xl transition duration-200"
+    <a class="hidden lg:inline-block lg:ml-auto lg:mr-3 py-2 px-6 bg-primaryDark hover:bg-gray-900 text-sm text-white font-bold rounded-xl transition duration-200"
         href="{{ url('/dashboard') }}">Dashboard</a>
     @else
     <a class="hidden lg:inline-block lg:ml-auto lg:mr-3 py-2 px-6 bg-gray-50 hover:bg-gray-100 text-sm text-gray-900 font-bold  rounded-xl transition duration-200"
@@ -56,7 +55,6 @@
         href="{{ route('register') }}">Sign Up</a>
     @endif
     @endauth
-    @endif
     @endif
     @endif
     <div class="hidden lg:flex pl-4 items-center gap-1">
@@ -99,12 +97,11 @@
             </ul>
         </div>
         <div class="mt-auto">
-            @if(!Auth::check())
             @if(Route::current()->getName() != 'login' && Route::current()->getName() != 'register')
             @if (Route::has('login'))
             <div class="pt-6">
                 @auth
-                <a class="block px-4 py-3 mb-2 leading-loose text-xs text-center text-white font-semibold bg-blue-600 hover:bg-blue-700  rounded-xl"
+                <a class="block px-4 py-3 mb-2 leading-loose text-xs text-center text-white font-semibold bg-primaryDark hover:bg-gray-900  rounded-xl"
                     href="{{ url('/dashboard') }}">Dashboard</a>
                 @else
 
@@ -117,7 +114,6 @@
                 @endif
                 @endauth
             </div>
-            @endif
             @endif
             @endif
             <div class="flex justify-center mt-4">
