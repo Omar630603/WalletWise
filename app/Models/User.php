@@ -44,4 +44,18 @@ class User extends Authenticatable
     {
         return $this->hasMany(Category::class);
     }
+
+    public function getUserNameLettersAttribute()
+    {
+        $names = explode(' ', $this->name);
+        $letters = array_map(function ($name) {
+            return $name[0];
+        }, $names);
+
+        if (count($letters) > 2) {
+            $letters = [$letters[0], end($letters)];
+        }
+
+        return strtoupper(implode('', $letters));
+    }
 }

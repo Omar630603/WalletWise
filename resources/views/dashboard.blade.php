@@ -1,17 +1,52 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Dashboard') }}
-        </h2>
-    </x-slot>
-
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900 dark:text-gray-100">
-                    {{ __("You're logged in!") }}
-                </div>
+    <span class="font-bold text-xl px-8 text-primaryDark dark:text-primaryLight">
+        <span class="greetings text-xl"></span>{{ Auth::user()->name }}
+    </span>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 px-10 mt-10 sm:pr-10">
+        {{-- Left Side --}}
+        <div>
+            <span>My Wallets</span>
+            {{-- Upper Side --}}
+            <div>
+                <span>Wallet 1</span>
+                <span>Wallet 2</span>
+                <span>Wallet 3</span>
+            </div>
+            {{-- Lower Side --}}
+            <span>Statistics</span>
+            <div>
+                <span>Wallet 1</span>
+                <span>Wallet 2</span>
+                <span>Wallet 3</span>
+            </div>
+        </div>
+        {{-- Right Side --}}
+        <div class="sm:col-span-2">
+            {{-- Upper Side --}}
+            <span>Wallet Summary</span>
+            <div>
+                <span>Expanses</span>
+                <span>Income</span>
+            </div>
+            <span>Transactions History</span>
+            {{-- Lower Side --}}
+            <div>
+                <span>Wallet 1</span>
+                <span>Wallet 2</span>
+                <span>Wallet 3</span>
             </div>
         </div>
     </div>
+    <script>
+        var today = new Date();
+        var curHr = today.getHours();
+        var greetings = document.querySelector('.greetings');
+        if (curHr < 12) {
+            greetings.innerHTML = 'Good Morning, ';
+        } else if (curHr < 18) {
+            greetings.innerHTML = 'Good Afternoon, ';
+        } else {
+            greetings.innerHTML = 'Good Evening, ';
+        }
+    </script>
 </x-app-layout>

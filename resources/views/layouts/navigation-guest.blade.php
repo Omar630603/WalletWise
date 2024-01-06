@@ -3,7 +3,8 @@
         <a href="/">
             <x-application-logo class="w-8 h-8 fill-current text-gray-500" />
         </a>
-        <span class="ml-2 text-xl font-bold text-primaryDark dark:text-primaryLight">WalletWise</span>
+        <span
+            class="ml-2 text-xl font-bold text-primaryDark dark:text-primaryLight">{{ config('app.name', 'WalletWise') }}</span>
     </div>
     <div class="lg:hidden">
         <button class="navbar-burger flex items-center text-blue-600 dark:text-white p-3">
