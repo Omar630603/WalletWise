@@ -19,13 +19,16 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
             integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
             crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <script src="https://kit.fontawesome.com/29c8920454.js" crossorigin="anonymous"></script>
+        {{-- <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script> --}}
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
 
     <body class="font-sans antialiased">
         <div class="min-h-screen bg-white dark:bg-gray-800">
             @include('layouts.navigation')
-            <div class="flex">
+            <div class="flex py-5">
                 <aside
                     class="h-screen w-fit hidden sm:flex flex-col space-y-10 items-center justify-between relative bg-gray-100 dark:bg-gray-900 mx-10 rounded-full text-white p-5">
                     <div class="shrink-0 flex items-center my-5">

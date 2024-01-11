@@ -20,6 +20,7 @@ return new class extends Migration
             $table->foreignId('to_wallet_id')->nullable()->constrained('wallets')->onDelete('cascade');
             $table->foreignId('category_id')->constrained()->onDelete('cascade');
             $table->longText('description')->nullable();
+            $table->date('date');
             $table->timestamps();
         });
     }
