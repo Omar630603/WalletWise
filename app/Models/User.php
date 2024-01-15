@@ -17,6 +17,7 @@ class User extends Authenticatable
         'username',
         'email',
         'password',
+        'default_wallet_id',
         'google_id'
     ];
 
@@ -57,5 +58,11 @@ class User extends Authenticatable
         }
 
         return strtoupper(implode('', $letters));
+    }
+
+    public function setDefaultWallet($id)
+    {
+        $this->default_wallet_id = $id;
+        $this->save();
     }
 }

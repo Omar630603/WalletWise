@@ -9,9 +9,16 @@ class Category extends Model
 {
     use HasFactory;
 
+    const DEFAULT_CATEGORIES = [
+        'initiate_wallet' => [
+            ['name' => 'Initiate Wallet', 'icon' => 'fa-plus'],
+        ]
+    ];
+
     protected $fillable = [
         'user_id',
         'name',
+        'icon',
     ];
 
     public function user()
