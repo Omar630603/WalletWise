@@ -27,10 +27,11 @@ class WalletController extends Controller
 
             $request->user()->setDefaultWallet($wallet->id);
 
-            $category = $request->user()->categories()->firstOrCreate(
-                ['name' => Category::DEFAULT_CATEGORIES['initiate_wallet'][0]['name']],
-                ['icon' => Category::DEFAULT_CATEGORIES['initiate_wallet'][0]['icon']]
-            );
+            $category = Category::where('name', Category::DEFAULT_CATEGORIES['initiate_wallet']['name'])->first();
+
+            if (!$category) {
+                throw new \Exception('Category not found');
+            }
 
             if ($wallet->balance > 0) {
                 $str_balance = Currencies::getSymbol($wallet->currency) . ' ' . number_format($wallet->balance, 2, '.', ',');
@@ -44,11 +45,11 @@ class WalletController extends Controller
             }
 
             DB::commit();
-            return  Redirect::route('dashboard')->with('status', 'wallet-created');
+            return  Redirect::route('dashboard')->with(['status' => 'wallet-created', 'message' => "Wallet {$wallet->name} created successfully"]);
         } catch (\Exception $e) {
             DB::rollback();
             throw $e;
-            return  Redirect::route('dashboard')->with('status', 'wallet-not-created');
+            return  Redirect::route('dashboard')->with(['status' => 'wallet-creation-failed', 'message' => "Wallet {$wallet->name} creation failed"]);
         }
     }
 }

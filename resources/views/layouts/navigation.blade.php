@@ -93,5 +93,11 @@
                 </form>
             </div>
         </div>
+        <div class="m-3">
+            <label class="switch">
+                <input type="checkbox" id="theme-toggle-side-menu" onchange="toggleTheme()">
+                <span class="slider round"></span>
+            </label>
+        </div>
     </div>
 </nav>
