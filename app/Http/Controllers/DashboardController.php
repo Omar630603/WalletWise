@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use App\Models\User;
 use App\Models\Wallet;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\Intl\Currencies;
 
@@ -57,68 +59,91 @@ class DashboardController extends Controller
             }
 
             $defaultWallet_number = 0;
+            $defaultCurrency = '';
+            $summary_formatted = [];
+            $userCurrencies = [];
 
             if ($defaultWallet) {
                 $userWallets = $user->wallets->sortBy('created_at');
+                $defaultCurrency = request('currency') ?? $defaultWallet->currency;
+
+                $userCurrencies = $userWallets->pluck('currency')->unique()->toArray();
+                if (request('currency') != $defaultWallet->currency && request('currency') != null) {
+                    $defaultWallet = $userWallets->where('currency', $defaultCurrency)->first();
+                }
 
                 if (request('default_wallet') != null) {
                     switch (request('default_wallet')) {
                         case 'next':
-                            $defaultWallet = $userWallets->where('id', '>', $defaultWallet->id)->first();
+                            $defaultWallet = $userWallets->where('currency', $defaultCurrency)->where('id', '>', $defaultWallet->id)->first();
                             if ($defaultWallet === null) {
-                                $defaultWallet = $userWallets->first();
+                                $defaultWallet = $userWallets->where('currency', $defaultCurrency)->first();
                             }
                             break;
                         case 'prev':
-                            $defaultWallet = $userWallets->where('id', '<', $defaultWallet->id)->last();
+                            $defaultWallet = $userWallets->where('currency', $defaultCurrency)->where('id', '<', $defaultWallet->id)->last();
                             if ($defaultWallet === null) {
-                                $defaultWallet = $userWallets->last();
+                                $defaultWallet = $userWallets->where('currency', $defaultCurrency)->last();
                             }
                             break;
                     }
+                    $user->setDefaultWallet($defaultWallet->id);
+                    return redirect()->route('dashboard');
+                }
+
+                foreach ($userWallets->where('currency', $defaultCurrency)->values() as $key => $wallet) {
+                    if ($wallet->id == $defaultWallet->id) {
+                        $defaultWallet_number = $key + 1;
+                        break;
+                    }
+                }
+
+                if (request('wallet') != null && request('wallet') != 'all') {
+                    $wallet = Wallet::where([['id', request('wallet')], ['user_id', $user->id]])->firstOrFail();
+                    $defaultWallet_transactions = $wallet->transactionsFrom()->with('category', 'toWallet', 'fromWallet')
+                        ->whereYear('date', $current_year)->whereMonth('date', date('m', strtotime($current_month)))
+                        ->get()
+                        ->merge($wallet->transactionsTo()->with('category', 'toWallet', 'fromWallet')
+                            ->whereYear('date', $current_year)
+                            ->whereMonth('date', date('m', strtotime($current_month)))
+                            ->get())
+                        ->sortByDesc('date');
+                    $defaultWallet = $wallet;
+                } else {
+                    $defaultWallet_transactions = $user->transactions()->with('category', 'toWallet', 'fromWallet')
+                        ->where(function ($query) use ($defaultCurrency) {
+                            $query->whereHas('toWallet', function ($query) use ($defaultCurrency) {
+                                $query->where('currency', $defaultCurrency);
+                            })->orWhereHas('fromWallet', function ($query) use ($defaultCurrency) {
+                                $query->where('currency', $defaultCurrency);
+                            });
+                        })
+                        ->whereYear('date', $current_year)
+                        ->whereMonth('date', date('m', strtotime($current_month)))
+                        ->get()
+                        ->sortByDesc('date');
                 }
 
                 $user->setDefaultWallet($defaultWallet->id);
                 $defaultWallet_type_label = Wallet::TYPES[array_search($defaultWallet->type, array_column(Wallet::TYPES, 'value'))]['label'];
                 $defaultWallet_formatted_balance = Currencies::getSymbol($defaultWallet->currency) . ' ' . number_format($defaultWallet->balance, 2, '.', ',');
+                $summary_formatted = $this->getSummaryData($current_month, $current_year, $defaultWallet, $user, $defaultCurrency);
 
-                $defaultWallet_number =  $userWallets->search(function ($wallet) use ($defaultWallet) {
-                    return $wallet->id == $defaultWallet->id;
-                }) + 1;
+                $page = request('page', 1);
+                $perPage = 5;
+                $offset = ($page * $perPage) - $perPage;
 
-                if (request('wallet') == 'all') {
-                    $defaultWallet_transactions = $user->transactions()
-                        ->whereYear('date', $current_year)
-                        ->whereMonth('date', date('m', strtotime($current_month)))
-                        ->get()
-                        ->sortByDesc('date');
-                } else if (request('wallet') != null) {
-                    $wallet = Wallet::where([['id', request('wallet')], ['user_id', $user->id]])->firstOrFail();
-                    $defaultWallet_transactions = $wallet->transactionsFrom()
-                        ->whereYear('date', $current_year)->whereMonth('date', date('m', strtotime($current_month)))
-                        ->get()
-                        ->merge($wallet->transactionsTo()
-                            ->whereYear('date', $current_year)
-                            ->whereMonth('date', date('m', strtotime($current_month)))
-                            ->get())
-                        ->sortByDesc('date');
-                } else {
-                    $defaultWallet_transactions = $defaultWallet->transactionsFrom()
-                        ->whereYear('date', $current_year)
-                        ->whereMonth('date', date('m', strtotime($current_month)))
-                        ->get()
-                        ->merge($defaultWallet->transactionsTo()
-                            ->whereYear('date', $current_year)
-                            ->whereMonth('date', date('m', strtotime($current_month)))
-                            ->get())
-                        ->sortByDesc('date');
-                }
+                $paginator = new LengthAwarePaginator(
+                    array_slice($defaultWallet_transactions->toArray(), $offset, $perPage, true),
+                    count($defaultWallet_transactions),
+                    $perPage,
+                    $page,
+                    ['path' => request()->url(), 'query' => request()->query()]
+                );
+
+                $defaultWallet_transactions = $paginator;
             }
 
-            $summary_formatted = [];
-            if ($defaultWallet) {
-                $summary_formatted = $this->getSummaryData($current_month, $current_year, $defaultWallet, $user);
-            }
             return view('dashboard', compact(
                 'walletTypes',
                 'currencies',
@@ -131,7 +156,9 @@ class DashboardController extends Controller
                 'current_year',
                 'current_month',
                 'summary_formatted',
-                'defaultWallet_number'
+                'defaultWallet_number',
+                'userCurrencies',
+                'defaultCurrency'
             ));
         } catch (\Exception $e) {
             throw $e;
@@ -148,33 +175,41 @@ class DashboardController extends Controller
         }
     }
 
-    private function calculateTotal($transactions, $startDate, $endDate, $amountType)
+    private function calculateTotal($transactions, $month, $year, $amountType)
     {
-        return $transactions->where('date', '>=', $startDate)
-            ->where('date', '<', $endDate)
+        $internal_transfer_category = Category::where('name', Category::DEFAULT_CATEGORIES['internal_transfer']['name'])->first();
+        return $transactions->whereYear('date', $year)
+            ->whereMonth('date', date('m', strtotime($month)))
             ->where($amountType, '>', 0)
+            ->where('category_id', '!=', $internal_transfer_category->id)
             ->sum($amountType);
     }
 
-    private function getSummaryData($month, $year, $wallet, $user): array
+    private function getSummaryData($month, $year, $wallet, $user, $defaultCurrency): array
     {
-        $lastMonthStartDate = date('Y-m-d', strtotime($year . '-' . $month . '-01 -1 month'));
-        $lastMonthEndDate = date('Y-m-t', strtotime($year . '-' . $month . '-01 -1 month'));
+        $lastMonth = date('M', strtotime($year . '-' . $month . '-01 -1 month'));
+        $lastMonthYear = date('Y', strtotime($year . '-' . $month . '-01 -1 month'));
 
-        $currentMonthStartDate = date('Y-m-d', strtotime($year . '-' . $month . '-01'));
-        $currentMonthEndDate = date('Y-m-t', strtotime($year . '-' . $month . '-01'));
+        $userTransactions = $user->transactions()->with('category', 'toWallet', 'fromWallet')
+            ->where(function ($query) use ($defaultCurrency) {
+                $query->whereHas('toWallet', function ($query) use ($defaultCurrency) {
+                    $query->where('currency', $defaultCurrency);
+                })->orWhereHas('fromWallet', function ($query) use ($defaultCurrency) {
+                    $query->where('currency', $defaultCurrency);
+                });
+            });
 
-        $lastMonthExpense = $this->calculateTotal($user->transactions(), $lastMonthStartDate, $lastMonthEndDate, 'amountOut');
-        $lastMonthIncome = $this->calculateTotal($user->transactions(), $lastMonthStartDate, $lastMonthEndDate, 'amountIn');
+        $lastMonthExpense = $this->calculateTotal(clone $userTransactions, $lastMonth, $lastMonthYear, 'amountOut');
+        $lastMonthIncome = $this->calculateTotal(clone $userTransactions, $lastMonth, $lastMonthYear, 'amountIn');
 
-        $currentMonthExpense = $this->calculateTotal($user->transactions(), $currentMonthStartDate, $currentMonthEndDate, 'amountOut');
-        $currentMonthIncome = $this->calculateTotal($user->transactions(), $currentMonthStartDate, $currentMonthEndDate, 'amountIn');
+        $currentMonthExpense = $this->calculateTotal(clone $userTransactions, $month, $year, 'amountOut');
+        $currentMonthIncome = $this->calculateTotal(clone $userTransactions, $month, $year, 'amountIn');
 
-        $lastMonthWalletExpense = $this->calculateTotal($wallet->transactionsFrom(), $lastMonthStartDate, $lastMonthEndDate, 'amountOut');
-        $lastMonthWalletIncome = $this->calculateTotal($wallet->transactionsTo(), $lastMonthStartDate, $lastMonthEndDate, 'amountIn');
+        $lastMonthWalletExpense = $this->calculateTotal($wallet->transactionsFrom(), $lastMonth, $lastMonthYear, 'amountOut');
+        $lastMonthWalletIncome = $this->calculateTotal($wallet->transactionsTo(), $lastMonth, $lastMonthYear, 'amountIn');
 
-        $currentMonthWalletExpense = $this->calculateTotal($wallet->transactionsFrom(), $currentMonthStartDate, $currentMonthEndDate, 'amountOut');
-        $currentMonthWalletIncome = $this->calculateTotal($wallet->transactionsTo(), $currentMonthStartDate, $currentMonthEndDate, 'amountIn');
+        $currentMonthWalletExpense = $this->calculateTotal($wallet->transactionsFrom(), $month, $year, 'amountOut');
+        $currentMonthWalletIncome = $this->calculateTotal($wallet->transactionsTo(), $month, $year, 'amountIn');
 
         // $lastMonthExpense = 5350000;
         // $lastMonthIncome = 2500000;
@@ -191,8 +226,8 @@ class DashboardController extends Controller
         $walletExpenseDifferencePercentage = $this->calculatePercentageDifference($currentMonthWalletExpense, $lastMonthWalletExpense);
         $walletIncomeDifferencePercentage = $this->calculatePercentageDifference($currentMonthWalletIncome, $lastMonthWalletIncome);
 
-        $walletExpensePercentage = $currentMonthWalletExpense > 0 ? round(($currentMonthWalletExpense / $currentMonthExpense) * 100, 2) : 0;
-        $walletIncomePercentage = $currentMonthWalletIncome > 0 ? round(($currentMonthWalletIncome / $currentMonthIncome) * 100, 2) : 0;
+        $walletExpensePercentage = $currentMonthExpense > 0 ? round(($currentMonthWalletExpense / $currentMonthExpense) * 100, 2) : 0;
+        $walletIncomePercentage = $currentMonthIncome > 0 ? round(($currentMonthWalletIncome / $currentMonthIncome) * 100, 2) : 0;
 
         return [
             'lastMonthExpense' => Currencies::getSymbol($wallet->currency) . ' ' . number_format($lastMonthExpense, 2, '.', ','),

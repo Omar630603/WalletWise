@@ -129,6 +129,9 @@ $(document).ready(function () {
     $("#transaction_wallet_filter").change(function () {
         updateURL();
     });
+    $("#currencies_filter").change(function () {
+        updateURL();
+    });
     if ($("#go_to_current_month").length) {
         $("#go_to_current_month").click(function () {
             window.location.href = "/dashboard";
@@ -140,6 +143,7 @@ $(document).ready(function () {
         var currentYear = $("#current_year").val();
         var currentWalletTransactions =
             defaultWallet == "" ? $("#transaction_wallet_filter").val() : "";
+        var currentCurrency = $("#currencies_filter").val();
 
         window.location.href =
             "/dashboard?month=" +
@@ -149,6 +153,8 @@ $(document).ready(function () {
             "&wallet=" +
             currentWalletTransactions +
             "&default_wallet=" +
-            defaultWallet;
+            defaultWallet +
+            "&currency=" +
+            currentCurrency;
     }
 });

@@ -1,12 +1,12 @@
 <x-app-layout>
-    <div class="px-8 mb-4">
+    <div class="pl-5 pr-10 mb-4">
         @if (session('status') == 'wallet-created')
         <x-alert-session-status color="green" message="{{ session('message') }}" />
         @elseif (session('status') == 'wallet-not-created')
         <x-alert-session-status color="red" message="{{ session('message') }}" />
         @endif
     </div>
-    <div class="flex justify-between items-center px-5 sm:pr-10 flex-wrap gap-3">
+    <div class="flex justify-center lg:justify-between items-center px-5 sm:pr-10 flex-wrap gap-3">
         <span class="font-bold text-xl text-primaryDark dark:text-primaryLight">
             <span class="greetings text-xl"></span>{{ Auth::user()->name }}
         </span>
@@ -29,6 +29,7 @@
                 <a id="next_month" class="cursor-pointer bg-primaryLight dark:bg-primaryDark p-1 rounded-md">
                     <i class="fa-solid fa-chevron-right text-gray-700 dark:text-gray-200 text-sm"></i>
                 </a>
+
                 {{-- Go to current --}}
                 @if ($current_month != date('M') || $current_year != date('Y'))
                 <x-primary-button id="go_to_current_month" class="h-full" type="button"
@@ -41,6 +42,16 @@
                     <div class="tooltip-arrow" data-popper-arrow></div>
                 </div>
                 @endif
+                <select id="currencies_filter"
+                    class="p-2 rounded-lg bg-primaryLight dark:bg-primaryDark text-md text-primaryDark dark:text-primaryLight">
+                    @foreach ($userCurrencies as $currency)
+                    <option value="{{$currency}}" @if($currency==request()->query('currency') || $currency ==
+                        $defaultCurrency) selected
+                        @endif>
+                        {{$currency}}
+                    </option>
+                    @endforeach
+                </select>
             </div>
         </div>
     </div>
@@ -49,14 +60,14 @@
         <div class="space-y-8 col-span-2 xl:col-span-1">
             {{-- Upper Side --}}
             <div class="space-y-5">
-                <div class="flex justify-between gap-2 items-center">
+                <div class="flex justify-between gap-2 items-start">
                     <span class="text-primaryDark dark:text-primaryLight text-xl font-semibold">My Wallets</span>
                     @if (Auth::user()->wallets->count() >= 1)
                     <div>
                         <x-primary-button data-tooltip-target="tooltip-add_wallet" type="button"
                             data-tooltip-placement="bottom" class="h-full " data-modal-target="create-wallet-modal"
                             data-modal-toggle="create-wallet-modal">
-                            <i class="fa-solid fa-plus text-white dark:text-black"></i>
+                            <i class="fa-solid fa-plus text-white dark:text-black my-1.5"></i>
                         </x-primary-button>
                         <div id="tooltip-add_wallet" role="tooltip"
                             class="absolute z-10 invisible inline-block px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-primaryDark rounded-lg shadow-sm opacity-0 tooltip dark:bg-gray-700">
@@ -167,7 +178,7 @@
                         <span
                             class="text-primaryDark dark:text-primaryLight text-sm font-semibold">{{$defaultWallet_number}}
                             of
-                            {{Auth::user()->wallets->count()}}</span>
+                            {{Auth::user()->wallets->where('currency', $defaultCurrency)->count()}}</span>
                         <button type="button" class="w-8 h-8 rounded-full text-sm bg-primaryDark dark:bg-gray-800"
                             id="next_wallet" type="button">
                             <i class=" fa-solid fa-chevron-right text-white"></i>
@@ -331,7 +342,7 @@
                                     r="30%" cx="50%" cy="50%"></circle>
                             </svg>
                             <span
-                                class="progress-text absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-primaryLight text-md lg:text-lg">
+                                class="progress-text absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-primaryLight text-sm lg:text-md">
                                 {{$summary_formatted['walletExpensePercentage']}}</span>
                         </div>
                         <div id="tooltip-wallet_expanses_percentage" role="tooltip"
@@ -382,7 +393,7 @@
                                     fill="transparent" r="30%" cx="50%" cy="50%"></circle>
                             </svg>
                             <span
-                                class="progress-text absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-primaryLight text-md lg:text-lg">
+                                class="progress-text absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-primaryLight text-md lg:text-md">
                                 {{$summary_formatted['walletIncomePercentage']}}</span>
                             </span>
                         </div>
@@ -434,16 +445,14 @@
                 <div class="flex justify-between items-center">
                     <span class="text-primaryDark dark:text-primaryLight text-xl font-semibold">Transactions
                         History</span>
-                    @if(Auth::user()->wallets->count() >= 1)
+                    @if(Auth::user()->wallets->where('currency', $defaultCurrency)->count() >= 1)
                     <div class="flex gap-2">
                         <select id="transaction_wallet_filter"
                             class="p-2 rounded-lg bg-primaryLight dark:bg-primaryDark text-md text-primaryDark dark:text-primaryLight">
                             <option value="all" @if(request()->query('wallet') == 'all') selected @endif
                                 >All Wallets</option>
-                            @foreach (Auth::user()->wallets as $wallet)
+                            @foreach (Auth::user()->wallets->where('currency', $defaultCurrency) as $wallet)
                             <option value="{{$wallet->id}}" @if($wallet->id == request()->query('wallet')) selected
-                                @elseif(request()->query('wallet') == null && $wallet->id == $defaultWallet->id)
-                                selected
                                 @endif>
                                 {{$wallet->name}}
                             </option>
@@ -469,60 +478,64 @@
                         <div class="flex gap-3 items-start">
                             <div
                                 class="w-12 h-full rounded-xl bg-white dark:bg-gray-800  justify-center items-center hidden md:flex">
-                                <i
-                                    class="fa-solid {{$transaction->category->icon}} text-xl text-primaryDark dark:text-primaryLight"></i>
+                                <i class="fa-solid {{$transaction['category']['icon']}} text-xl text-primaryDark
+                                dark:text-primaryLight"></i>
                             </div>
                             <div class="flex flex-col justify-evenly h-full">
                                 <div class="flex gap-2">
                                     <span
-                                        class="font-semibold text-primaryDark dark:text-primaryLight">{{$transaction->category->name}}
+                                        class="font-semibold text-primaryDark dark:text-primaryLight">{{$transaction['category']['name']}}
                                     </span>
                                     <div
                                         class="p-1 rounded-xl bg-white dark:bg-gray-800 justify-center items-center flex md:hidden">
-                                        <i
-                                            class="fa-solid {{$transaction->category->icon}} text-xs text-primaryDark dark:text-primaryLight"></i>
+                                        <i class="fa-solid {{$transaction['category']['icon']}} text-xs text-primaryDark
+                                        dark:text-primaryLight"></i>
                                     </div>
                                 </div>
-                                @if(request()->query('wallet') == 'all' || $transaction->category->name ==
+                                @if(request()->query('wallet') == 'all' || $transaction['category']['name'] ==
                                 App\Models\Category::DEFAULT_CATEGORIES['internal_transfer']['name'])
                                 <span>
-                                    @if ($transaction->to_wallet_id != null)
+                                    @if ($transaction['to_wallet_id'] != null)
                                     <span class="text-green-500">To</span><span
                                         class="text-primaryDark dark:text-primaryLight">
-                                        {{$transaction->toWallet->name}}</span>
+                                        {{$transaction['to_wallet']['name']}}</span>
                                     @endif
-                                    @if ($transaction->from_wallet_id != null)
+                                    @if ($transaction['from_wallet_id'] != null)
                                     <span class="text-red-500">From</span><span
                                         class="text-primaryDark dark:text-primaryLight">
-                                        {{$transaction->fromWallet->name}}</span>
+                                        {{$transaction['from_wallet']['name']}}</span>
                                     @endif
                                 </span>
                                 @endif
-                                <span class="text-md text-gray-500">{{$transaction->description}}</span>
+                                <span class="text-md text-gray-500">{{$transaction['description']}}</span>
                             </div>
                         </div>
                         <div class="space-y-5">
-                            @if($transaction->amountIn != null && $transaction->amountOut == null)
+                            @if($transaction['amountIn'] != null && $transaction['amountOut'] == null)
                             <span class="text-green-500">+{{
-                                Symfony\Component\Intl\Currencies::getSymbol($defaultWallet->currency). ' ' .
-                                number_format($transaction->amountIn, 2, '.', ',') }}</span>
-                            @elseif($transaction->amountIn == null && $transaction->amountOut != null)
+                                Symfony\Component\Intl\Currencies::getSymbol($transaction['to_wallet']['currency']). ' '
+                                .
+                                number_format($transaction['amountIn'], 2, '.', ',') }}</span>
+                            @elseif($transaction['amountIn'] == null && $transaction['amountOut'] != null)
                             <span class="text-red-500">-{{
-                                Symfony\Component\Intl\Currencies::getSymbol($defaultWallet->currency). ' ' .
-                                number_format($transaction->amountOut, 2, '.', ',') }}</span>
+                                Symfony\Component\Intl\Currencies::getSymbol($transaction['from_wallet']['currency']). '
+                                ' .
+                                number_format($transaction['amountOut'], 2, '.', ',') }}</span>
                             @else
                             <div class="flex gap-1 justify-end items-end flex-wrap">
                                 <span class="text-green-500">+{{
-                                    Symfony\Component\Intl\Currencies::getSymbol($defaultWallet->currency). ' ' .
-                                    number_format($transaction->amountIn, 2, '.', ',') }}</span>
+                                    Symfony\Component\Intl\Currencies::getSymbol($transaction['to_wallet']['currency']).
+                                    ' ' .
+                                    number_format($transaction['amountIn'], 2, '.', ',') }}</span>
                                 <span class="text-red-500">-{{
-                                    Symfony\Component\Intl\Currencies::getSymbol($defaultWallet->currency). ' ' .
-                                    number_format($transaction->amountOut, 2, '.', ',') }}</span>
+                                    Symfony\Component\Intl\Currencies::getSymbol($transaction['from_wallet']['currency']).
+                                    ' ' .
+                                    number_format($transaction['amountOut'], 2, '.', ',') }}</span>
                             </div>
                             @endif
                             <div class="text-gray-500 flex flex-col items-end">
-                                <span>{{Carbon\Carbon::parse($transaction->date)->diffForHumans()}}</span>
-                                <span>{{Carbon\Carbon::parse($transaction->date)->format('d M Y')}}</span>
+                                <span>{{Carbon\Carbon::parse($transaction['date'])->diffForHumans()}}</span>
+                                <span>{{Carbon\Carbon::parse($transaction['date'])->format('d M Y')}}</span>
                             </div>
                         </div>
                     </div>
@@ -530,6 +543,11 @@
                     <x-alert-session-status color="gray"
                         message="No transactions found, or maybe you haven't created any transactions yet" />
                     @endforelse
+                    @if (!empty($defaultWallet_transactions))
+                    <div class="mt-4">
+                        {{ $defaultWallet_transactions->links('vendor.pagination.tailwind') }}
+                    </div>
+                    @endif
                 </div>
             </div>
         </div>
