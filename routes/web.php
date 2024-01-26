@@ -5,6 +5,7 @@ use App\Http\Controllers\OAuthController;
 use App\Http\Controllers\WalletController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\TransactionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -32,6 +33,7 @@ Route::get('/contact', function () {
 Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::resource('wallets', WalletController::class)->middleware(['auth', 'verified']);
+Route::resource('transactions', TransactionController::class)->middleware(['auth', 'verified']);
 
 Route::controller(OAuthController::class)->group(function () {
     Route::get('auth/{provider}/redirect', 'redirectToProvider')->name('auth.provider.redirect');

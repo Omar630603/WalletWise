@@ -144,6 +144,26 @@ class DashboardController extends Controller
                 $defaultWallet_transactions = $paginator;
             }
 
+            $transactionTypes = [
+                ['label' => 'Expense', 'value' => 'expense'],
+                ['label' => 'Income', 'value' => 'income'],
+            ];
+
+            $excludedCategories = [
+                Category::DEFAULT_CATEGORIES['internal_transfer']['name'],
+                Category::DEFAULT_CATEGORIES['borrow']['name'],
+                Category::DEFAULT_CATEGORIES['lend']['name'],
+                Category::DEFAULT_CATEGORIES['initiate_wallet']['name'],
+            ];
+
+            $defaultCategories = Category::where('user_id', null)->whereNotIn('name', $excludedCategories)->get();
+            $userCategories = $user->categories;
+
+            $categories = [
+                'Default Categories' => $defaultCategories,
+                'Your Categories' => $userCategories,
+            ];
+
             return view('dashboard', compact(
                 'walletTypes',
                 'currencies',
@@ -158,7 +178,9 @@ class DashboardController extends Controller
                 'summary_formatted',
                 'defaultWallet_number',
                 'userCurrencies',
-                'defaultCurrency'
+                'defaultCurrency',
+                'transactionTypes',
+                'categories'
             ));
         } catch (\Exception $e) {
             throw $e;

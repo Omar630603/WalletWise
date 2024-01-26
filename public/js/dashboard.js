@@ -59,6 +59,21 @@ $(document).ready(function () {
         this.value = parts.join(".");
     });
 
+    $("#amount_display").on("input", function () {
+        this.value = this.value
+            .replace(/[^0-9.]/g, "")
+            .replace(/(\..*)\./g, "$1");
+        let value = this.value.replace(/,/g, "");
+        let numericValue = parseFloat(value);
+        if (isNaN(numericValue)) {
+            numericValue = 0;
+        }
+        $("#amount").val(numericValue);
+        let parts = this.value.split(".");
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        this.value = parts.join(".");
+    });
+
     let progressBars = $(".progress");
     let progressTexts = $(".progress-text");
 
@@ -157,4 +172,30 @@ $(document).ready(function () {
             "&currency=" +
             currentCurrency;
     }
+});
+
+function selectCategory(name, icon, id) {
+    $("#selectedCategory").text(name);
+    $("#categoryIcon").attr(
+        "class",
+        "fa-solid " + icon + " text-lg text-primaryDark dark:text-primaryLight"
+    );
+    $("#categoryDropdown").addClass("hidden");
+    $("#category").val(id);
+}
+
+$(document).on("click", function (event) {
+    var $categoryDropdown = $("#categoryDropdown");
+    var $selectedCategory = $("#selectedCategory");
+    if (
+        !$categoryDropdown.is(event.target) &&
+        !$selectedCategory.is(event.target) &&
+        $categoryDropdown.has(event.target).length === 0
+    ) {
+        $categoryDropdown.addClass("hidden");
+    }
+});
+
+$("#selectedCategory").on("click", function () {
+    $("#categoryDropdown").toggleClass("hidden");
 });

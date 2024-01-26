@@ -4,6 +4,10 @@
         <x-alert-session-status color="green" message="{{ session('message') }}" />
         @elseif (session('status') == 'wallet-not-created')
         <x-alert-session-status color="red" message="{{ session('message') }}" />
+        @elseif (session('status') == 'transaction-created')
+        <x-alert-session-status color="green" message="{{ session('message') }}" />
+        @elseif (session('status') == 'transaction-not-created')
+        <x-alert-session-status color="red" message="{{ session('message') }}" />
         @endif
     </div>
     <div class="flex justify-center lg:justify-between items-center px-5 sm:pr-10 flex-wrap gap-3">
@@ -29,7 +33,6 @@
                 <a id="next_month" class="cursor-pointer bg-primaryLight dark:bg-primaryDark p-1 rounded-md">
                     <i class="fa-solid fa-chevron-right text-gray-700 dark:text-gray-200 text-sm"></i>
                 </a>
-
                 {{-- Go to current --}}
                 @if ($current_month != date('M') || $current_year != date('Y'))
                 <x-primary-button id="go_to_current_month" class="h-full" type="button"
@@ -460,13 +463,161 @@
                         </select>
                         <div>
                             <x-primary-button data-tooltip-target="tooltip-add_transaction" type="button"
-                                data-tooltip-placement="bottom" class="h-full">
+                                data-tooltip-placement="bottom" class="h-full"
+                                data-modal-target="create-transaction-modal"
+                                data-modal-toggle="create-transaction-modal">
                                 <i class="fa-solid fa-plus text-white dark:text-black"></i>
                             </x-primary-button>
                             <div id="tooltip-add_transaction" role="tooltip"
                                 class="absolute z-10 invisible inline-block px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-primaryDark rounded-lg shadow-sm opacity-0 tooltip dark:bg-gray-700">
                                 Add new transaction
                                 <div class="tooltip-arrow" data-popper-arrow></div>
+                            </div>
+                        </div>
+                        <div id="create-transaction-modal" tabindex="-1" aria-hidden="true"
+                            class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+                            <div class="relative p-4 w-full max-w-md max-h-full">
+                                <div class="relative bg-white rounded-lg shadow dark:bg-gray-800">
+                                    <div
+                                        class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
+                                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                                            Add new transaction
+                                        </h3>
+                                        <button type="button"
+                                            class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
+                                            data-modal-toggle="create-transaction-modal">
+                                            <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                                                fill="none" viewBox="0 0 14 14">
+                                                <path stroke="currentColor" stroke-linecap="round"
+                                                    stroke-linejoin="round" stroke-width="2"
+                                                    d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
+                                            </svg>
+                                            <span class="sr-only">Close modal</span>
+                                        </button>
+                                    </div>
+                                    <!-- Modal body -->
+                                    <form class="p-4 md:p-5" action="{{ route('transactions.store') }}" method="POST">
+                                        @csrf
+                                        <div class="mb-5">
+                                            <div
+                                                class="text-gray-500 dark:text-gray-400 text-sm font-semibold p-2 text-center bg-gray-200 dark:bg-gray-700 rounded-lg w-full">
+                                                You are adding a new transaction to
+                                                {{$defaultWallet->name}}.
+                                            </div>
+                                        </div>
+                                        <div class="mb-5">
+                                            <div class="mb-5">
+                                                <label for="transaction_type"
+                                                    class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Transaction
+                                                    Type</label>
+                                                <select id="transaction_type" name="transaction_type" required
+                                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500">
+                                                    <option selected="">Select transaction type</option>
+                                                    @forelse ($transactionTypes as $type)
+                                                    <option value="{{ $type['value'] }}">{{ $type['label'] }}</option>
+                                                    @empty
+                                                    <option value="0" disabled>No transaction type available</option>
+                                                    @endforelse
+                                                </select>
+                                            </div>
+                                            <div class="mb-5">
+                                                <label for="category"
+                                                    class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Category</label>
+                                                <div class="relative w-full">
+                                                    <div
+                                                        class="flex items-center border bg-gray-50 border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500 cursor-pointer">
+                                                        <div id="selectedCategory" class="flex-grow pr-2">Select a
+                                                            category
+                                                        </div>
+                                                        <i id="categoryIcon"
+                                                            class="fa-solid text-lg text-primaryDark dark:text-primaryLight"></i>
+                                                    </div>
+                                                    <div id="categoryDropdown"
+                                                        class="absolute hidden z-10 mt-2 pt-2 bg-white border border-gray-300 text-gray-900 text-sm rounded-md shadow-lg w-full dark:bg-gray-800 dark:border-gray-500 dark:text-white">
+                                                        @foreach ($categories as $key => $category)
+                                                        <span class="font-semibold my-2 p-2">{{$key}}</span>
+                                                        @if (!empty($category))
+                                                        <div class="ml-2 p-2">
+                                                            <div class="mt-1">
+                                                                @forelse ($category as $item)
+                                                                <div class="flex items-center py-1 w-full">
+                                                                    <div class="mr-2">
+                                                                        <i
+                                                                            class="fa-solid {{$item->icon}} text-lg text-primaryDark dark:text-primaryLight"></i>
+                                                                    </div>
+                                                                    <div class="cursor-pointer flex-grow"
+                                                                        onclick="selectCategory('{{ $item->name }}', '{{$item->icon}}', '{{$item->id}}')">
+                                                                        {{ $item->name }}
+                                                                    </div>
+                                                                </div>
+                                                                @empty
+                                                                <span class="text-gray-500">No category available</span>
+                                                                @endforelse
+                                                            </div>
+                                                        </div>
+                                                        @endif
+                                                        @endforeach
+                                                    </div>
+                                                </div>
+                                                <input type="text" id="category" hidden name="category" required>
+                                            </div>
+                                            <div class="mb-5">
+                                                <label for="amount"
+                                                    class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Amount</label>
+                                                <div class="relative w-full">
+                                                    <div
+                                                        class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+                                                        <span
+                                                            class="text-gray-900 dark:text-white text-sm">{{$defaultCurrency}}</span>
+                                                    </div>
+                                                    <input type="text" id="amount_display" min="0"
+                                                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                                        placeholder="Input amount" required="">
+                                                    <input type="hidden" name="amount" id="amount" required>
+                                                </div>
+                                            </div>
+                                            <div class="mb-5">
+                                                <label for="date"
+                                                    class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Date</label>
+                                                <div class="relative max-w-sm">
+                                                    <div
+                                                        class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+                                                        <svg class="w-4 h-4 text-gray-500 dark:text-gray-400"
+                                                            aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                                                            fill="currentColor" viewBox="0 0 20 20">
+                                                            <path
+                                                                d="M20 4a2 2 0 0 0-2-2h-2V1a1 1 0 0 0-2 0v1h-3V1a1 1 0 0 0-2 0v1H6V1a1 1 0 0 0-2 0v1H2a2 2 0 0 0-2 2v2h20V4ZM0 18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8H0v10Zm5-8h10a1 1 0 0 1 0 2H5a1 1 0 0 1 0-2Z" />
+                                                        </svg>
+                                                    </div>
+                                                    <input datepicker datepicker-autohide type="text"
+                                                        datepicker-format="dd MM yyyy" id="date" name="date" required
+                                                        value="{{ date('d F Y') }}"
+                                                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                                        placeholder="Select date">
+                                                </div>
+                                            </div>
+                                            <div class="mb-10">
+                                                <label for="description"
+                                                    class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Description</label>
+                                                <textarea id="description" name="description"
+                                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                                                    placeholder="What is this transaction for?"></textarea>
+                                            </div>
+                                        </div>
+                                        <input type="text" value="{{$defaultWallet->id}}" name="wallet_id" hidden>
+                                        <div class="flex justify-end">
+                                            <x-primary-button>
+                                                <svg class="me-1 -ms-1 w-5 h-5" fill="currentColor" viewBox="0 0 20 20"
+                                                    xmlns="http://www.w3.org/2000/svg">
+                                                    <path fill-rule="evenodd"
+                                                        d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
+                                                        clip-rule="evenodd"></path>
+                                                </svg>
+                                                Save
+                                            </x-primary-button>
+                                        </div>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                     </div>
