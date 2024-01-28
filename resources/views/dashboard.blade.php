@@ -332,7 +332,7 @@
             <div class="space-y-5">
                 <span class="text-primaryDark dark:text-primaryLight text-xl font-semibold">Statistics</span>
                 @if ($chartData)
-                <div class="bg-white dark:bg-gray-900 rounded-lg dark:shadow p-4 md:p-6">
+                <div class="bg-white dark:bg-gray-900 rounded-lg shadow p-4 md:p-6">
                     <div class="flex justify-between mb-5">
                         <div class="grid gap-4 grid-cols-2">
                             <div>
@@ -566,7 +566,40 @@
         <div class="col-span-2 space-y-8">
             {{-- Upper Side --}}
             <div class="space-y-5">
-                <span class="text-primaryDark dark:text-primaryLight text-xl font-semibold">Wallet Summary</span>
+                <div class="flex justify-between">
+                    <span class="text-primaryDark dark:text-primaryLight text-xl font-semibold">Wallet Summary</span>
+                    @if (Auth::user()->wallets->count() > 1)
+                    <div class="flex flex-col items-end">
+                        <h6
+                            class="inline-flex items-center text-gray-500 dark:text-gray-400 leading-none font-normal mb-2">
+                            Total Amount
+                            <svg data-popover-target="total-amount-info" data-popover-placement="bottom"
+                                class="w-3 h-3 text-gray-400 hover:text-gray-900 dark:hover:text-white cursor-pointer ms-1"
+                                aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+                                viewBox="0 0 20 20">
+                                <path
+                                    d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z" />
+                            </svg>
+                            <div data-popover id="total-amount-info" role="tooltip"
+                                class="absolute z-10 invisible inline-block text-sm text-gray-500 transition-opacity duration-300 bg-white border border-gray-200 rounded-lg shadow-sm opacity-0 w-72 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400">
+                                <div class="p-3 space-y-2">
+                                    <h3 class="font-semibold text-gray-900 dark:text-white"> Total Amount Left
+                                        From All Wallets
+                                    </h3>
+                                    <p>
+                                        This shows the total amount left from all the wallets of the same
+                                        currency selected above.
+                                    </p>
+                                </div>
+                                <div data-popper-arrow></div>
+                            </div>
+                        </h6>
+                        <p class="text-gray-900 dark:text-white text-lg leading-none font-bold">
+                            {{$total_amount}}
+                        </p>
+                    </div>
+                    @endif
+                </div>
                 @if ($summary_formatted)
                 <div class="grid grid-cols-1 lg:grid-cols-2 justify-items-stretch gap-2">
                     <div class="grid grid-cols-5 justify-between gap-2 items-center bg-primaryDark dark:bg-gray-900 rounded-xl p-2"
@@ -680,7 +713,7 @@
             </div>
             {{-- Lower Side --}}
             <div class="space-y-5">
-                <div class="flex justify-between items-center">
+                <div class="flex justify-between items-start">
                     <span class="text-primaryDark dark:text-primaryLight text-xl font-semibold">Transactions
                         History</span>
                     @if(Auth::user()->wallets->where('currency', $defaultCurrency)->count() >= 1)

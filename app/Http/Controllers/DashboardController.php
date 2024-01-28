@@ -58,6 +58,7 @@ class DashboardController extends Controller
             $summary_formatted = [];
             $userCurrencies = [];
             $chartData = [];
+            $total_amount = 0;
 
             if ($defaultWallet) {
                 $userWallets = $user->wallets->sortBy('created_at');
@@ -139,6 +140,9 @@ class DashboardController extends Controller
                 );
 
                 $defaultWallet_transactions = $paginator;
+
+                $total_amount = $user->wallets->where('currency', $defaultCurrency)->sum('balance');
+                $total_amount = Currencies::getSymbol($defaultCurrency) . ' ' . number_format($total_amount, 2, '.', ',');
             }
 
             $transactionTypes = [
@@ -178,7 +182,8 @@ class DashboardController extends Controller
                 'defaultCurrency',
                 'transactionTypes',
                 'categories',
-                'chartData'
+                'chartData',
+                'total_amount',
             ));
         } catch (\Exception $e) {
             throw $e;
