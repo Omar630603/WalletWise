@@ -29,12 +29,7 @@ class DashboardController extends Controller
             $user = User::find(Auth::user()->id);
 
             $numberNewWallet = $user->wallets->count() + 1;
-
-            $ends = ['th', 'st', 'nd', 'rd', 'th', 'th', 'th', 'th', 'th', 'th'];
-            if ((($numberNewWallet % 100) >= 11) && (($numberNewWallet % 100) <= 13))
-                $numberNewWallet = $numberNewWallet . 'th';
-            else
-                $numberNewWallet = $numberNewWallet . $ends[$numberNewWallet % 10];
+            $numberNewWallet = $this->ordinal($numberNewWallet);
 
 
             $defaultWallet = Wallet::where('id', $user->default_wallet_id)->first();
@@ -62,6 +57,7 @@ class DashboardController extends Controller
             $defaultCurrency = '';
             $summary_formatted = [];
             $userCurrencies = [];
+            $chartData = [];
 
             if ($defaultWallet) {
                 $userWallets = $user->wallets->sortBy('created_at');
@@ -128,6 +124,7 @@ class DashboardController extends Controller
                 $defaultWallet_type_label = Wallet::TYPES[array_search($defaultWallet->type, array_column(Wallet::TYPES, 'value'))]['label'];
                 $defaultWallet_formatted_balance = Currencies::getSymbol($defaultWallet->currency) . ' ' . number_format($defaultWallet->balance, 2, '.', ',');
                 $summary_formatted = $this->getSummaryData($current_month, $current_year, $defaultWallet, $user, $defaultCurrency);
+                $chartData = $this->getChartData($current_month, $current_year, $defaultCurrency);
 
                 $page = request('page', 1);
                 $perPage = 5;
@@ -180,12 +177,22 @@ class DashboardController extends Controller
                 'userCurrencies',
                 'defaultCurrency',
                 'transactionTypes',
-                'categories'
+                'categories',
+                'chartData'
             ));
         } catch (\Exception $e) {
             throw $e;
             // return redirect()->route('dashboard');
         }
+    }
+
+    private function ordinal($number)
+    {
+        $ends = ['th', 'st', 'nd', 'rd', 'th', 'th', 'th', 'th', 'th', 'th'];
+        if ((($number % 100) >= 11) && (($number % 100) <= 13))
+            return $number . 'th';
+        else
+            return $number . $ends[$number % 10];
     }
 
     private function calculatePercentageDifference($current, $last)
@@ -233,15 +240,6 @@ class DashboardController extends Controller
         $currentMonthWalletExpense = $this->calculateTotal($wallet->transactionsFrom(), $month, $year, 'amountOut');
         $currentMonthWalletIncome = $this->calculateTotal($wallet->transactionsTo(), $month, $year, 'amountIn');
 
-        // $lastMonthExpense = 5350000;
-        // $lastMonthIncome = 2500000;
-        // $currentMonthExpense = 3500000;
-        // $currentMonthIncome = 6500000;
-        // $lastMonthWalletExpense = 2000000;
-        // $lastMonthWalletIncome = 2200000;
-        // $currentMonthWalletExpense = 3000000;
-        // $currentMonthWalletIncome = 6000000;
-
         $expenseDifferencePercentage = $this->calculatePercentageDifference($currentMonthExpense, $lastMonthExpense);
         $incomeDifferencePercentage = $this->calculatePercentageDifference($currentMonthIncome, $lastMonthIncome);
 
@@ -269,5 +267,127 @@ class DashboardController extends Controller
             'walletExpensePercentage' => round($walletExpensePercentage) . '%',
             'walletIncomePercentage' => round($walletIncomePercentage) . '%',
         ];
+    }
+
+    private function getChartData($month, $year, $currency): array
+    {
+        $user = User::find(Auth::user()->id);
+
+        $total_expenses = 0;
+        $total_incomes = 0;
+        $chart_option = "";
+        $total_expenses_array = [];
+        $total_incomes_array = [];
+        $periods = [];
+
+        try {
+            $userTransactions = $user->transactions()->with('category', 'toWallet', 'fromWallet')
+                ->where(function ($query) use ($currency) {
+                    $query->whereHas('toWallet', function ($query) use ($currency) {
+                        $query->where('currency', $currency);
+                    })->orWhereHas('fromWallet', function ($query) use ($currency) {
+                        $query->where('currency', $currency);
+                    });
+                });
+
+            $chart_option = request('chart-option') ?? "all-month";
+            if (!in_array($chart_option, ['all-month', 'all-year', '01', '02', '03', '04'])) {
+                $chart_option = "all-month";
+            }
+            $periods = $this->getPeriod($chart_option, $month, $year);
+
+            if ($chart_option == "all-year") {
+                foreach ($periods as $period) {
+                    $expenses = $this->calculateTotal(clone $userTransactions, $period, $year, 'amountOut');
+                    $incomes = $this->calculateTotal(clone $userTransactions, $period, $year, 'amountIn');
+                    // if ($expenses == 0 && $incomes == 0) {
+                    //     $periods = array_diff($periods, [$period]);
+                    //     continue;
+                    // }
+                    $total_expenses_array[] = $expenses;
+                    $total_incomes_array[] = $incomes;
+                }
+
+                $periods = array_map(function ($periods) use ($year) {
+                    return date('j M Y', strtotime($periods . ' ' . $year));
+                }, $periods);
+
+                $chart_option = "This Year";
+            } else {
+                foreach ($periods as $period) {
+                    $transactions_expenses = clone $userTransactions;
+                    $transactions_incomes = clone $userTransactions;
+                    $expenses = $transactions_expenses->where('date', '>=', $period)->where('date', '<=', date('Y-m-d', strtotime($period . ' +1 day')))->where('amountOut', '>', 0)->sum('amountOut');
+                    $incomes = $transactions_incomes->where('date', '>=', $period)->where('date', '<=', date('Y-m-d', strtotime($period . ' +1 day')))->where('amountIn', '>', 0)->sum('amountIn');
+                    // if ($expenses == 0 && $incomes == 0) {
+                    //     $periods = array_diff($periods, [$period]);
+                    //     continue;
+                    // }
+                    $total_expenses_array[] = $expenses;
+                    $total_incomes_array[] = $incomes;
+                }
+
+                $periods = array_map(function ($periods) {
+                    return date('j M', strtotime($periods));
+                }, $periods);
+
+                $chart_option = $chart_option == "all-month" ? "This Month" : $this->ordinal((int) $chart_option) . " Week";
+            }
+
+            $total_expenses = array_sum($total_expenses_array);
+            $total_incomes = array_sum($total_incomes_array);
+        } catch (\Exception $e) {
+            throw $e;
+        }
+
+        $results = [
+            'total_expenses' => Currencies::getSymbol($currency) . ' ' . number_format($total_expenses, 2, '.', ','),
+            'total_incomes' => Currencies::getSymbol($currency) . ' ' . number_format($total_incomes, 2, '.', ','),
+            'chart_option' => $chart_option,
+            'total_expenses_array' => $total_expenses_array,
+            'total_incomes_array' => $total_incomes_array,
+            'periods' => $periods,
+        ];
+
+        return $results;
+    }
+
+    private function getPeriod($option, $month, $year): array
+    {
+        $periods = [];
+        switch ($option) {
+            case 'all-year':
+                for ($i = 1; $i <= 12; $i++) {
+                    $periods[] = date('M', strtotime($year . '-' . $i . '-01'));
+                }
+                break;
+            case 'all-month':
+                $days = cal_days_in_month(CAL_GREGORIAN, date('m', strtotime($month)), date('Y', strtotime($year)));
+                for ($i = 1; $i <= $days; $i++) {
+                    $periods[] = date('Y-m-d', strtotime($year . '-' . date('m', strtotime($month)) . '-' . $i));
+                }
+                break;
+            case '01':
+                for ($i = 1; $i <= 7; $i++) {
+                    $periods[] = date('Y-m-d', strtotime($year . '-' . date('m', strtotime($month)) . '-' . $i));
+                }
+                break;
+            case '02':
+                for ($i = 8; $i <= 14; $i++) {
+                    $periods[] = date('Y-m-d', strtotime($year . '-' . date('m', strtotime($month)) . '-' . $i));
+                }
+                break;
+            case '03':
+                for ($i = 15; $i <= 21; $i++) {
+                    $periods[] = date('Y-m-d', strtotime($year . '-' . date('m', strtotime($month)) . '-' . $i));
+                }
+                break;
+            case '04':
+                for ($i = 22; $i <= cal_days_in_month(CAL_GREGORIAN, date('m', strtotime($month)), date('Y', strtotime($year))); $i++) {
+                    $periods[] = date('Y-m-d', strtotime($year . '-' . date('m', strtotime($month)) . '-' . $i));
+                }
+                break;
+        }
+        return $periods;
     }
 }

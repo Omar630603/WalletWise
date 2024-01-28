@@ -147,18 +147,24 @@ $(document).ready(function () {
     $("#currencies_filter").change(function () {
         updateURL();
     });
+    $(".chartOption").click(function () {
+        let option = $(this).data("chart-option");
+        $("#chart-option").val(option);
+        updateURL("", option);
+    });
     if ($("#go_to_current_month").length) {
         $("#go_to_current_month").click(function () {
             window.location.href = "/dashboard";
         });
     }
 
-    function updateURL(defaultWallet = "") {
+    function updateURL(defaultWallet = "", charO = "") {
         var currentMonth = $("#current_month").val();
         var currentYear = $("#current_year").val();
         var currentWalletTransactions =
             defaultWallet == "" ? $("#transaction_wallet_filter").val() : "";
         var currentCurrency = $("#currencies_filter").val();
+        var chartOption = charO == "" ? $("#chart-option").val() : charO;
 
         window.location.href =
             "/dashboard?month=" +
@@ -170,7 +176,9 @@ $(document).ready(function () {
             "&default_wallet=" +
             defaultWallet +
             "&currency=" +
-            currentCurrency;
+            currentCurrency +
+            "&chart-option=" +
+            chartOption;
     }
 });
 

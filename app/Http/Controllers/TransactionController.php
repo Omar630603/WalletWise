@@ -27,6 +27,11 @@ class TransactionController extends Controller
         }
 
         $date = date('Y-m-d', strtotime($request->date));
+
+        if ($date == date('Y-m-d')) {
+            $date = date('Y-m-d H:i:s');
+        }
+
         if ($request->transaction_type == 'expense') {
             $request->user()->transactions()->create([
                 'amountOut' => $request->amount,

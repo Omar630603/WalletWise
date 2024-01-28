@@ -1,19 +1,24 @@
 <x-app-layout>
     <div class="pl-5 pr-10 mb-4">
         @if (session('status') == 'wallet-created')
-        <x-alert-session-status color="green" message="{{ session('message') }}" />
+        <x-alert-session-status color="green" message="{{ session('message') }}"
+            id="alert-session-status-wallet-created" />
         @elseif (session('status') == 'wallet-not-created')
-        <x-alert-session-status color="red" message="{{ session('message') }}" />
+        <x-alert-session-status color="red" message="{{ session('message') }}"
+            id="alert-session-status-wallet-not-created" />
         @elseif (session('status') == 'transaction-created')
-        <x-alert-session-status color="green" message="{{ session('message') }}" />
+        <x-alert-session-status color="green" message="{{ session('message') }}"
+            id="alert-session-status-transaction-created" />
         @elseif (session('status') == 'transaction-not-created')
-        <x-alert-session-status color="red" message="{{ session('message') }}" />
+        <x-alert-session-status color="red" message="{{ session('message') }}"
+            id="alert-session-status-transaction-not-created" />
         @endif
     </div>
     <div class="flex justify-center lg:justify-between items-center px-5 sm:pr-10 flex-wrap gap-3">
         <span class="font-bold text-xl text-primaryDark dark:text-primaryLight">
             <span class="greetings text-xl"></span>{{ Auth::user()->name }}
         </span>
+        @if (Auth::user()->wallets->count() >= 1)
         <div class="flex gap-4">
             <div class="flex justify-center items-center gap-2">
                 <a id="prev_month" class="cursor-pointer bg-primaryLight dark:bg-primaryDark p-1 rounded-md">
@@ -57,6 +62,7 @@
                 </select>
             </div>
         </div>
+        @endif
     </div>
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-10 px-5 mt-10 sm:pr-10">
         {{-- Left Side --}}
@@ -325,6 +331,235 @@
             {{-- Lower Side --}}
             <div class="space-y-5">
                 <span class="text-primaryDark dark:text-primaryLight text-xl font-semibold">Statistics</span>
+                @if ($chartData)
+                <div class="bg-white dark:bg-gray-900 rounded-lg dark:shadow p-4 md:p-6">
+                    <div class="flex justify-between mb-5">
+                        <div class="grid gap-4 grid-cols-2">
+                            <div>
+                                <h5
+                                    class="inline-flex items-center text-gray-500 dark:text-gray-400 leading-none font-normal mb-2">
+                                    Expenses
+                                    <svg data-popover-target="clicks-info" data-popover-placement="bottom"
+                                        class="w-3 h-3 text-gray-400 hover:text-gray-900 dark:hover:text-white cursor-pointer ms-1"
+                                        aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+                                        viewBox="0 0 20 20">
+                                        <path
+                                            d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z" />
+                                    </svg>
+                                    <div data-popover id="clicks-info" role="tooltip"
+                                        class="absolute z-10 invisible inline-block text-sm text-gray-500 transition-opacity duration-300 bg-white border border-gray-200 rounded-lg shadow-sm opacity-0 w-72 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400">
+                                        <div class="p-3 space-y-2">
+                                            <h3 class="font-semibold text-gray-900 dark:text-white">
+                                                {{ $current_month }} - {{ $current_year }} Expenses
+                                            </h3>
+                                            <p>
+                                                This chart shows the total amount of expenses you have made this month
+                                                from all wallets with {{ $defaultCurrency }} currency.
+                                            </p>
+                                        </div>
+                                        <div data-popper-arrow></div>
+                                    </div>
+                                </h5>
+                                <p class="text-gray-900 dark:text-white text-lg leading-none font-bold">
+                                    {{$chartData['total_expenses']}}
+                                </p>
+                            </div>
+                            <div>
+                                <h5
+                                    class="inline-flex items-center text-gray-500 dark:text-gray-400 leading-none font-normal mb-2">
+                                    Incomes
+                                    <svg data-popover-target="cpc-info" data-popover-placement="bottom"
+                                        class="w-3 h-3 text-gray-400 hover:text-gray-900 dark:hover:text-white cursor-pointer ms-1"
+                                        aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+                                        viewBox="0 0 20 20">
+                                        <path
+                                            d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z" />
+                                    </svg>
+                                    <div data-popover id="cpc-info" role="tooltip"
+                                        class="absolute z-10 invisible inline-block text-sm text-gray-500 transition-opacity duration-300 bg-white border border-gray-200 rounded-lg shadow-sm opacity-0 w-72 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400">
+                                        <div class="p-3 space-y-2">
+                                            <h3 class="font-semibold text-gray-900 dark:text-white">{{$current_month}} -
+                                                {{$current_year}} Incomes
+                                            </h3>
+                                            <p>
+                                                This chart shows the total amount of incomes you have made this month
+                                                from all wallets with {{ $defaultCurrency }} currency.
+                                            </p>
+                                        </div>
+                                        <div data-popper-arrow></div>
+                                    </div>
+                                </h5>
+                                <p class="text-gray-900 dark:text-white text-lg leading-none font-bold">
+                                    {{$chartData['total_incomes']}}
+                                </p>
+                            </div>
+                        </div>
+                        <div>
+                            <button id="dropdownDefaultButton" data-dropdown-toggle="lastDaysdropdown"
+                                data-dropdown-placement="bottom" type="button"
+                                class="px-3 py-2 inline-flex items-center text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+                                {{$chartData['chart_option']}}
+                                <svg class="w-2.5 h-2.5 ms-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                                    fill="none" viewBox="0 0 10 6">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                        stroke-width="2" d="m1 1 4 4 4-4" />
+                                </svg>
+                            </button>
+                            <div id="lastDaysdropdown"
+                                class="z-10 hidden bg-white divide-y divide-gray-100 rounded-lg shadow w-44 dark:bg-gray-700">
+                                <ul class="py-2 text-sm text-gray-700 dark:text-gray-200"
+                                    aria-labelledby="dropdownDefaultButton">
+                                    <li>
+                                        <a data-chart-option="01"
+                                            class="cursor-pointer block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white chartOption">1st
+                                            Week</a>
+                                    </li>
+                                    <li>
+                                        <a data-chart-option="02"
+                                            class="cursor-pointer block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white chartOption">2nd
+                                            Week</a>
+                                    </li>
+                                    <li>
+                                        <a data-chart-option="03"
+                                            class="cursor-pointer block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white chartOption">3rd
+                                            Week</a>
+                                    </li>
+                                    <li>
+                                        <a data-chart-option="04"
+                                            class="cursor-pointer block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white chartOption">4th
+                                            Week</a>
+                                    </li>
+                                    <li>
+                                        <a data-chart-option="all-month"
+                                            class="cursor-pointer block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white chartOption">
+                                            This Month</a>
+                                    </li>
+                                    <li>
+                                        <a data-chart-option="all-year"
+                                            class="cursor-pointer block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white chartOption">
+                                            This Year</a>
+                                    </li>
+                                </ul>
+                            </div>
+                            <input type="text" id="chart-option" name="chart-option"
+                                value="{{request()->query('chart-option')}}" hidden>
+                        </div>
+                    </div>
+                    <div id="line-chart"></div>
+                </div>
+                <script>
+                    window.addEventListener("load", function() {
+                        let options = {
+                            chart: {
+                                height: "100%",
+                                maxWidth: "100%",
+                                type: "line",
+                                fontFamily: " 'Poppins', sans-serif",
+                                dropShadow: {
+                                    enabled: false,
+                                },
+                                toolbar: {
+                                    show: false,
+                                },
+                            },
+                            tooltip: {
+                                enabled: true,
+                                x: {
+                                    show: false,
+                                },
+                            },
+                            dataLabels: {
+                                enabled: false,
+                            },
+                            stroke: {
+                                width: 6,
+                            },
+                            grid: {
+                                show: true,
+                                strokeDashArray: 4,
+                                padding: {
+                                    left: 0,
+                                    right: 0,
+                                    top: 0,
+                                    bottom: 0
+                                },
+                            },
+                            series: [
+                                {
+                                    name: "Expenses",
+                                    data: @json($chartData['total_expenses_array']),
+                                    color: "#F87171",
+                                },
+                                {
+                                    name: "Incomes",
+                                    data: @json($chartData['total_incomes_array']),
+                                    color: "#34D399",
+                                },
+                            ],
+                            legend: {
+                                show: false
+                            },
+                            stroke: {
+                                curve: 'smooth'
+                            },
+                            xaxis: {
+                                type: @json(request()->query('chart-option')) != "all-year" ? 'datetime' : '',
+                                categories: @json($chartData['periods']),
+                                labels: {
+                                    show: true,
+                                    style: {
+                                        fontFamily: 'Poppins',
+                                        cssClass: 'text-xs font-normal fill-gray-500 dark:fill-gray-400'
+                                    },
+                                    rotate: -90,
+                                    formatter: function (value, timestamp) {
+                                        if (@json(request()->query('chart-option')) != "all-year"){
+                                            return new Date(timestamp).toLocaleDateString('en-GB', {
+                                                day: 'numeric',
+                                                month: 'short'
+                                            });
+                                        }else{
+                                            return new Date(value).toLocaleDateString('en-GB', {
+                                                month: 'short'
+                                            });
+                                        }
+                                    }, 
+                                },
+                                axisBorder: {
+                                    show: false,
+                                },
+                                axisTicks: {
+                                    show: false,
+                                },
+                            },
+                            yaxis: {
+                                labels: {
+                                    formatter: function (value) {
+                                        if (value >= 1000000000) {
+                                            return "{{$defaultCurrency}} " + (value / 1000000000).toFixed(0) + 'B';
+                                        }else if (value >= 1000000) {
+                                            return "{{$defaultCurrency}} " + (value / 1000000).toFixed(0) + 'M';
+                                        }else if (value >= 1000) {
+                                            return "{{$defaultCurrency}} " + (value / 1000).toFixed(0) + 'K';
+                                        }else {
+                                            return "{{$defaultCurrency}} " + value;
+                                        }
+                                    },
+                                    padding: 4,
+                                },
+                                show: true,
+                            },
+                        }
+                        if (document.getElementById("line-chart") && typeof ApexCharts !== 'undefined') {
+                            const chart = new ApexCharts(document.getElementById("line-chart"), options);
+                            chart.render();
+                        }
+                    });
+                </script>
+                @else
+                <x-alert-session-status color="gray" id="no_statistics_alert"
+                    message="No statistics found yet, or you don't have any wallets yet" />
+                @endif
             </div>
         </div>
         {{-- Right Side --}}
@@ -439,7 +674,7 @@
                     </div>
                 </div>
                 @else
-                <x-alert-session-status color="gray"
+                <x-alert-session-status color="gray" id="no_summary_alert"
                     message="No summary found yet, or you don't have any wallets yet" />
                 @endif
             </div>
@@ -599,7 +834,7 @@
                                             <div class="mb-10">
                                                 <label for="description"
                                                     class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Description</label>
-                                                <textarea id="description" name="description"
+                                                <textarea id="description" name="description" rows="4"
                                                     class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                                                     placeholder="What is this transaction for?"></textarea>
                                             </div>
@@ -691,7 +926,7 @@
                         </div>
                     </div>
                     @empty
-                    <x-alert-session-status color="gray"
+                    <x-alert-session-status color="gray" id="no_transactions_alert"
                         message="No transactions found, or maybe you haven't created any transactions yet" />
                     @endforelse
                     @if (!empty($defaultWallet_transactions))

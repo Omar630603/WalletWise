@@ -25,7 +25,7 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
 
-    <body class="font-sans antialiased">
+    <body class="font-sans antialiased overflow-x-hidden">
         <div class="min-h-screen bg-white dark:bg-gray-800">
             @include('layouts.navigation')
             <div class="flex py-5">
@@ -90,7 +90,7 @@
             </div>
         </div>
         <script src="{{ asset('js/darkMode.js') }}"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.1/datepicker.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     </body>
 
 </html>
