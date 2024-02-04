@@ -74,6 +74,21 @@ $(document).ready(function () {
         this.value = parts.join(".");
     });
 
+    $("#fee_display").on("input", function () {
+        this.value = this.value
+            .replace(/[^0-9.]/g, "")
+            .replace(/(\..*)\./g, "$1");
+        let value = this.value.replace(/,/g, "");
+        let numericValue = parseFloat(value);
+        if (isNaN(numericValue)) {
+            numericValue = 0;
+        }
+        $("#fee").val(numericValue);
+        let parts = this.value.split(".");
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        this.value = parts.join(".");
+    });
+
     let progressBars = $(".progress");
     let progressTexts = $(".progress-text");
 
@@ -206,4 +221,31 @@ $(document).on("click", function (event) {
 
 $("#selectedCategory").on("click", function () {
     $("#categoryDropdown").toggleClass("hidden");
+});
+
+let $transactionType = $("#transaction_type");
+let $categoryInput = $("#expense_income_category_input");
+let $borrowLendInput = $("#borrow_lend_input");
+let $internalTransferInput = $("#internal_transfer_input");
+
+$transactionType.on("change", function () {
+    if (
+        $transactionType.val() === "expense" ||
+        $transactionType.val() === "income"
+    ) {
+        $categoryInput.removeClass("hidden");
+        $borrowLendInput.addClass("hidden");
+        $internalTransferInput.addClass("hidden");
+    } else if (
+        $transactionType.val() === "borrow" ||
+        $transactionType.val() === "lend"
+    ) {
+        $categoryInput.addClass("hidden");
+        $borrowLendInput.removeClass("hidden");
+        $internalTransferInput.addClass("hidden");
+    } else if ($transactionType.val() === "internal_transfer") {
+        $categoryInput.addClass("hidden");
+        $borrowLendInput.addClass("hidden");
+        $internalTransferInput.removeClass("hidden");
+    }
 });

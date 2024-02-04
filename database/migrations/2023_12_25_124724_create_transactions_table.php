@@ -19,6 +19,7 @@ return new class extends Migration
             $table->foreignId('from_wallet_id')->nullable()->constrained('wallets')->onDelete('cascade');
             $table->foreignId('to_wallet_id')->nullable()->constrained('wallets')->onDelete('cascade');
             $table->foreignId('category_id')->constrained()->onDelete('cascade');
+            $table->foreign('parent_id')->references('id')->on('transactions')->onDelete('cascade')->nullable();
             $table->longText('description')->nullable();
             $table->datetime('date');
             $table->timestamps();

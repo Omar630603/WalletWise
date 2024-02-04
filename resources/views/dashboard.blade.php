@@ -788,7 +788,7 @@
                                                     @endforelse
                                                 </select>
                                             </div>
-                                            <div class="mb-5">
+                                            <div class="mb-5 hidden" id="expense_income_category_input">
                                                 <label for="category"
                                                     class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Category</label>
                                                 <div class="relative w-full">
@@ -827,7 +827,56 @@
                                                         @endforeach
                                                     </div>
                                                 </div>
-                                                <input type="text" id="category" hidden name="category" required>
+                                                <input type="text" id="category" hidden name="category">
+                                            </div>
+                                            <div class="mb-5 hidden" id="borrow_lend_input">
+                                                <div class="flex items-center ps-4 border border-gray-200 rounded dark:border-gray-700"
+                                                    data-tooltip-target="tooltip-borrow_lend">
+                                                    <input id="bordered-checkbox-1" type="checkbox"
+                                                        name="borrow_lend_return"
+                                                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                                                    <label for="bordered-checkbox-1"
+                                                        class="w-full py-4 ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">Return</label>
+                                                </div>
+                                                <div id="tooltip-borrow_lend" role="tooltip"
+                                                    class="absolute z-10 invisible inline-block px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-primaryDark rounded-lg shadow-sm opacity-0 tooltip dark:bg-gray-700 w-3/4">
+                                                    Check this box if the amount is a return of a borrowed or lent
+                                                    amount
+                                                    <div class="tooltip-arrow" data-popper-arrow></div>
+                                                </div>
+                                            </div>
+                                            <div class="mb-5 hidden" id="internal_transfer_input">
+                                                <div class="mb-5">
+                                                    <label for="wallet"
+                                                        class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">To
+                                                        Wallet</label>
+                                                    <select id="wallet" name="to_wallet" required
+                                                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500">
+                                                        <option selected="">Select wallet</option>
+                                                        @foreach (Auth::user()->wallets->where('currency',
+                                                        $defaultCurrency) as $wallet)
+                                                        @if ($wallet->id != $defaultWallet->id)
+                                                        <option value="{{$wallet->id}}">{{$wallet->name}}</option>
+                                                        @endif
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <div class="mb-5">
+                                                    <label for="fee"
+                                                        class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Transfer
+                                                        Fee</label>
+                                                    <div class="relative w-full">
+                                                        <div
+                                                            class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+                                                            <span
+                                                                class="text-gray-900 dark:text-white text-sm">{{$defaultCurrency}}</span>
+                                                        </div>
+                                                        <input type="text" id="fee_display" min="0"
+                                                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                                            placeholder="Input transaction fee, it's optional">
+                                                    </div>
+                                                    <input type="hidden" name="fee" id="fee">
+                                                </div>
                                             </div>
                                             <div class="mb-5">
                                                 <label for="amount"
@@ -911,8 +960,6 @@
                                         dark:text-primaryLight"></i>
                                     </div>
                                 </div>
-                                @if(request()->query('wallet') == 'all' || $transaction['category']['name'] ==
-                                App\Models\Category::DEFAULT_CATEGORIES['internal_transfer']['name'])
                                 <span>
                                     @if ($transaction['to_wallet_id'] != null)
                                     <span class="text-green-500">To</span><span
@@ -925,11 +972,10 @@
                                         {{$transaction['from_wallet']['name']}}</span>
                                     @endif
                                 </span>
-                                @endif
                                 <span class="text-md text-gray-500">{{$transaction['description']}}</span>
                             </div>
                         </div>
-                        <div class="space-y-5">
+                        <div class="space-y-5 flex flex-col items-end">
                             @if($transaction['amountIn'] != null && $transaction['amountOut'] == null)
                             <span class="text-green-500">+{{
                                 Symfony\Component\Intl\Currencies::getSymbol($transaction['to_wallet']['currency']). ' '

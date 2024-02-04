@@ -148,6 +148,9 @@ class DashboardController extends Controller
             $transactionTypes = [
                 ['label' => 'Expense', 'value' => 'expense'],
                 ['label' => 'Income', 'value' => 'income'],
+                ['label' => 'Borrow', 'value' => 'borrow'],
+                ['label' => 'Lend', 'value' => 'lend'],
+                ['label' => 'Internal Transfer', 'value' => 'internal_transfer'],
             ];
 
             $excludedCategories = [
