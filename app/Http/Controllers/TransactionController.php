@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class TransactionController extends Controller
 {
     public function store(Request $request)
     {
+        DB::beginTransaction();
         try {
             $request->validate([
                 'transaction_type' => 'required|in:expense,income,internal_transfer,borrow,lend',
@@ -21,24 +23,6 @@ class TransactionController extends Controller
                 'wallet_id' => 'required|exists:wallets,id,user_id,' . $request->user()->id,
             ]);
 
-            // $wallet = $request->user()->wallets()->find($request->wallet_id);
-            // if ($request->transaction_type == 'expense' && $wallet->balance < $request->amount) {
-            //     return redirect()->route('dashboard')->with(['status' => 'transaction-not-created', 'message' => 'Transaction creation failed, insufficient balance']);
-            // }
-            // if ($request->transaction_type == 'internal_transfer' && $wallet->balance < $request->amount) {
-            //     return redirect()->route('dashboard')->with(['status' => 'transaction-not-created', 'message' => 'Transaction creation failed, insufficient balance']);
-            // }
-            // if ($request->transaction_type == 'borrow' && $request->borrow_lend_return == true) {
-            //     if ($wallet->balance < $request->amount) {
-            //         return redirect()->route('dashboard')->with(['status' => 'transaction-not-created', 'message' => 'Transaction creation failed, insufficient balance']);
-            //     }
-            // }
-            // if ($request->transaction_type == 'lend' && $request->borrow_lend_return == false) {
-            //     if ($wallet->balance < $request->amount) {
-            //         return redirect()->route('dashboard')->with(['status' => 'transaction-not-created', 'message' => 'Transaction creation failed, insufficient balance']);
-            //     }
-            // }
-
             $wallet = $request->user()->wallets()->find($request->wallet_id);
 
             $transactionTypesRequiringBalance = ['expense', 'internal_transfer'];
@@ -49,112 +33,77 @@ class TransactionController extends Controller
             if ($shouldCheckBalance && $wallet->balance < $request->amount) {
                 return redirect()->route('dashboard')->with(['status' => 'transaction-not-created', 'message' => 'Transaction creation failed, insufficient balance']);
             }
+
+
+            $date = date('Y-m-d', strtotime($request->date));
+
+            if ($date == date('Y-m-d')) {
+                $date = date('Y-m-d H:i:s');
+            }
+
+            if ($request->transaction_type == 'expense') {
+                $this->createTransaction($request, null, $request->amount, $request->wallet_id, null, $request->category, null, $request->description, $date);
+                $wallet->balance -= $request->amount;
+                $wallet->save();
+            } elseif ($request->transaction_type == 'income') {
+                $this->createTransaction($request, $request->amount, null, null, $request->wallet_id, $request->category, null, $request->description, $date);
+                $wallet->balance += $request->amount;
+                $wallet->save();
+            } elseif ($request->transaction_type == 'internal_transfer') {
+                $internalTransferCategory = Category::where('name', Category::DEFAULT_CATEGORIES['internal_transfer']['name'])->first();
+                $transaction = $this->createTransaction($request, $request->amount, $request->amount, $request->wallet_id, $request->to_wallet, $internalTransferCategory->id, null, $request->description, $date);
+                if ($request->fee) {
+                    $feeCategory = Category::where('name', Category::DEFAULT_CATEGORIES['fees']['name'])->first();
+                    $this->createTransaction($request, null, $request->fee, $request->wallet_id, null, $feeCategory->id, $transaction->id, 'Transfer fee', $date);
+                    $wallet->balance -= $request->amount + $request->fee;
+                } else {
+                    $wallet->balance -= $request->amount;
+                }
+                $toWallet = $request->user()->wallets()->find($request->to_wallet);
+                $toWallet->balance += $request->amount;
+                $toWallet->save();
+                $wallet->save();
+            } elseif ($request->transaction_type == 'borrow') {
+                $barrowCategory = Category::where('name', Category::DEFAULT_CATEGORIES['borrow']['name'])->first();
+                if ($request->borrow_lend_return == true) {
+                    $this->createTransaction($request, null, $request->amount, $request->wallet_id, null, $barrowCategory->id, null, $request->description, $date);
+                    $wallet->balance -= $request->amount;
+                } else {
+                    $this->createTransaction($request, $request->amount, null, null, $request->wallet_id, $barrowCategory->id, null, $request->description, $date);
+                    $wallet->balance += $request->amount;
+                }
+                $wallet->save();
+            } elseif ($request->transaction_type == 'lend') {
+                $lendCategory = Category::where('name', Category::DEFAULT_CATEGORIES['lend']['name'])->first();
+                if ($request->borrow_lend_return == true) {
+                    $this->createTransaction($request, $request->amount, null, null, $request->wallet_id, $lendCategory->id, null, $request->description, $date);
+                    $wallet->balance += $request->amount;
+                } else {
+                    $this->createTransaction($request, null, $request->amount, $request->wallet_id, null, $lendCategory->id, null, $request->description, $date);
+                    $wallet->balance -= $request->amount;
+                }
+                $wallet->save();
+            }
+            DB::commit();
+            return redirect()->route('dashboard')->with(['status' => 'transaction-created', 'message' => 'Transaction created successfully']);
         } catch (\Exception $e) {
-            dd($e->getMessage(), $request->all());
+            DB::rollback();
             return redirect()->route('dashboard')->with(['status' => 'transaction-not-created', 'message' => 'Transaction creation failed ' . $e->getMessage()]);
         }
+    }
 
-        $date = date('Y-m-d', strtotime($request->date));
-
-        if ($date == date('Y-m-d')) {
-            $date = date('Y-m-d H:i:s');
-        }
-
-        if ($request->transaction_type == 'expense') {
-            $request->user()->transactions()->create([
-                'amountOut' => $request->amount,
-                'from_wallet_id' => $request->wallet_id,
-                'category_id' => $request->category,
-                'description' => $request->description,
-                'date' => $date,
-            ]);
-            $wallet->balance -= $request->amount;
-            $wallet->save();
-        } elseif ($request->transaction_type == 'income') {
-            $request->user()->transactions()->create([
-                'amountIn' => $request->amount,
-                'to_wallet_id' => $request->wallet_id,
-                'category_id' => $request->category,
-                'description' => $request->description,
-                'date' => $date,
-            ]);
-            $wallet->balance += $request->amount;
-            $wallet->save();
-        } elseif ($request->transaction_type == 'internal_transfer') {
-            $internalTransferCategory = Category::where('name', Category::DEFAULT_CATEGORIES['internal_transfer']['name'])->first();
-            $transaction = $request->user()->transactions()->create([
-                'amountOut' => $request->amount,
-                'amountIn' => $request->amount,
-                'category_id' => $internalTransferCategory->id,
-                'from_wallet_id' => $request->wallet_id,
-                'to_wallet_id' => $request->to_wallet,
-                'description' => $request->description,
-                'date' => $date,
-            ]);
-            if ($request->fee) {
-                $feeCategory = Category::where('name', Category::DEFAULT_CATEGORIES['fees']['name'])->first();
-                $request->user()->transactions()->create([
-                    'amountOut' => $request->fee,
-                    'from_wallet_id' => $request->wallet_id,
-                    'category_id' =>    $feeCategory->id,
-                    'parent_id' => $transaction->id,
-                    'description' => 'Transfer fee',
-                    'date' => $date,
-                ]);
-                $wallet->balance -= $request->amount + $request->fee;
-            } else {
-                $wallet->balance -= $request->amount;
-            }
-            $toWallet = $request->user()->wallets()->find($request->to_wallet);
-            $toWallet->balance += $request->amount;
-            $toWallet->save();
-            $wallet->save();
-        } elseif ($request->transaction_type == 'borrow') {
-            $barrowCategory = Category::where('name', Category::DEFAULT_CATEGORIES['borrow']['name'])->first();
-            if ($request->borrow_lend_return == true) {
-                $request->user()->transactions()->create([
-                    'amountOut' => $request->amount,
-                    'from_wallet_id' => $request->wallet_id,
-                    'category_id' => $barrowCategory->id,
-                    'description' => $request->description,
-                    'date' => $date,
-                ]);
-                $wallet->balance -= $request->amount;
-            } else {
-                $request->user()->transactions()->create([
-                    'amountIn' => $request->amount,
-                    'to_wallet_id' => $request->wallet_id,
-                    'category_id' => $barrowCategory->id,
-                    'description' => $request->description,
-                    'date' => $date,
-                ]);
-                $wallet->balance += $request->amount;
-            }
-            $wallet->save();
-        } elseif ($request->transaction_type == 'lend') {
-            $lendCategory = Category::where('name', Category::DEFAULT_CATEGORIES['lend']['name'])->first();
-            if ($request->borrow_lend_return == true) {
-                $request->user()->transactions()->create([
-                    'amountIn' => $request->amount,
-                    'to_wallet_id' => $request->wallet_id,
-                    'category_id' => $lendCategory->id,
-                    'description' => $request->description,
-                    'date' => $date,
-                ]);
-                $wallet->balance += $request->amount;
-            } else {
-                $request->user()->transactions()->create([
-                    'amountOut' => $request->amount,
-                    'from_wallet_id' => $request->wallet_id,
-                    'category_id' => $lendCategory->id,
-                    'description' => $request->description,
-                    'date' => $date,
-                ]);
-                $wallet->balance -= $request->amount;
-            }
-            $wallet->save();
-        }
-
-        return redirect()->route('dashboard')->with(['status' => 'transaction-created', 'message' => 'Transaction created successfully']);
+    private function createTransaction($request, $amountIn = null, $amountOut = null, $fromWalletId = null, $toWalletId = null, $categoryId, $parentId = null, $description = null, $date)
+    {
+        $transaction = $request->user()->transactions()->create([
+            'amountIn' => $amountIn,
+            'amountOut' => $amountOut,
+            'from_wallet_id' => $fromWalletId,
+            'to_wallet_id' => $toWalletId,
+            'category_id' => $categoryId,
+            'parent_id' => $parentId,
+            'description' => $description,
+            'date' => $date,
+        ]);
+        return $transaction;
     }
 }

@@ -8,15 +8,23 @@ use App\Models\Category;
 use Illuminate\Support\Facades\Redirect;
 use Symfony\Component\Intl\Currencies;
 use Illuminate\Support\Facades\DB;
+use App\Models\Wallet;
+use Illuminate\Validation\Rule;
 
 class WalletController extends Controller
 {
-    public function store(NewWalletRequest $request)
+    public function store(Request $request)
     {
         DB::beginTransaction();
-
         try {
-            $request->validated();
+            $request->validate([
+                'name' => ['required', 'string', 'max:255'],
+                'type' => ['required', Rule::in(array_column(Wallet::TYPES, 'value'))],
+                'currency' => ['required'],
+                'initial_balance' => ['required', 'numeric', 'min:0'],
+                'icon' => ['nullable', 'string', 'max:255'],
+                'color' => ['nullable', 'string', 'max:255'],
+            ]);
             $wallet = $request->user()->wallets()->create([
                 'name' => $request->name,
                 'type' => $request->type,
@@ -48,8 +56,7 @@ class WalletController extends Controller
             return  Redirect::route('dashboard')->with(['status' => 'wallet-created', 'message' => "Wallet {$wallet->name} created successfully"]);
         } catch (\Exception $e) {
             DB::rollback();
-            throw $e;
-            return  Redirect::route('dashboard')->with(['status' => 'wallet-creation-failed', 'message' => "Wallet {$wallet->name} creation failed"]);
+            return  Redirect::route('dashboard')->with(['status' => 'wallet-not-created', 'message' => "Wallet {$request->name} creation failed " . $e->getMessage()]);
         }
     }
 }

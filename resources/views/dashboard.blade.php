@@ -237,7 +237,7 @@
                                             Type</label>
                                         <select id="type" name="type"
                                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500">
-                                            <option selected="">Select wallet type</option>
+                                            <option selected disabled>Select wallet type</option>
                                             @forelse ($walletTypes as $type)
                                             <option value="{{ $type['value'] }}">{{ $type['label'] }}</option>
                                             @empty
@@ -251,7 +251,7 @@
                                             class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Currency</label>
                                         <select id="currency" name="currency"
                                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500">
-                                            <option selected="">Select currency</option>
+                                            <option selected disabled>Select currency</option>
                                             @forelse ($currencies as $code => $name)
                                             <option value="{{ $code }}">{{ $code }} - {{ $name }} ({{
                                                 $symbols[$code] }})</option>
@@ -780,7 +780,7 @@
                                                     Type</label>
                                                 <select id="transaction_type" name="transaction_type" required
                                                     class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500">
-                                                    <option selected="">Select transaction type</option>
+                                                    <option selected disabled>Select transaction type</option>
                                                     @forelse ($transactionTypes as $type)
                                                     <option value="{{ $type['value'] }}">{{ $type['label'] }}</option>
                                                     @empty
@@ -852,7 +852,7 @@
                                                         Wallet</label>
                                                     <select id="wallet" name="to_wallet" required
                                                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500">
-                                                        <option selected="">Select wallet</option>
+                                                        <option selected disabled>Select wallet</option>
                                                         @foreach (Auth::user()->wallets->where('currency',
                                                         $defaultCurrency) as $wallet)
                                                         @if ($wallet->id != $defaultWallet->id)

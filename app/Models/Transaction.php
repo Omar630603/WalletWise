@@ -16,6 +16,7 @@ class Transaction extends Model
         'from_wallet_id',
         'to_wallet_id',
         'category_id',
+        'parent_id',
         'description',
         'date',
     ];
