@@ -536,9 +536,9 @@
                                 labels: {
                                     formatter: function (value) {
                                         if (value >= 1000000000) {
-                                            return "{{$defaultCurrency}} " + (value / 1000000000).toFixed(0) + 'B';
+                                            return "{{$defaultCurrency}} " + (value / 1000000000).toFixed(1) + 'B';
                                         }else if (value >= 1000000) {
-                                            return "{{$defaultCurrency}} " + (value / 1000000).toFixed(0) + 'M';
+                                            return "{{$defaultCurrency}} " + (value / 1000000).toFixed(1) + 'M';
                                         }else if (value >= 1000) {
                                             return "{{$defaultCurrency}} " + (value / 1000).toFixed(0) + 'K';
                                         }else {
@@ -973,6 +973,42 @@
                                     @endif
                                 </span>
                                 <span class="text-md text-gray-500">{{$transaction['description']}}</span>
+                                @if ($transaction['child_id'] != null)
+                                @php
+                                $child_transaction = App\Models\Transaction::find($transaction['child_id']);
+                                @endphp
+                                @if ($child_transaction)
+                                <div class="text-mdflex flex-col gap-1">
+                                    <span class="text-gray-500">This transaction has:
+                                        {{$child_transaction->description}}</span>
+                                    @if($child_transaction->amountIn != null && $child_transaction->amountOut == null)
+                                    <span class="text-green-500">+{{
+                                        Symfony\Component\Intl\Currencies::getSymbol($child_transaction->toWallet->currency).
+                                        ' '
+                                        .
+                                        number_format($child_transaction->amountIn, 2, '.', ',') }}</span>
+                                    @elseif($child_transaction->amountIn == null && $child_transaction->amountOut !=
+                                    null)
+                                    <span class="text-red-500">-{{
+                                        Symfony\Component\Intl\Currencies::getSymbol($child_transaction->fromWallet->currency).
+                                        '
+                                        ' .
+                                        number_format($child_transaction->amountOut, 2, '.', ',') }}</span>
+                                    @else
+                                    <div class="flex gap-1 justify-end items-end flex-wrap">
+                                        <span class="text-green-500">+{{
+                                            Symfony\Component\Intl\Currencies::getSymbol($child_transaction->toWallet->currency).
+                                            ' ' .
+                                            number_format($child_transaction->amountIn, 2, '.', ',') }}</span>
+                                        <span class="text-red-500">-{{
+                                            Symfony\Component\Intl\Currencies::getSymbol($child_transaction->fromWallet->currency).
+                                            ' ' .
+                                            number_format($child_transaction->amountOut, 2, '.', ',') }}</span>
+                                    </div>
+                                    @endif
+                                </div>
+                                @endif
+                                @endif
                             </div>
                         </div>
                         <div class="space-y-5 flex flex-col items-end">

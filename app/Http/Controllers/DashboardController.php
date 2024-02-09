@@ -98,9 +98,11 @@ class DashboardController extends Controller
                 if (request('wallet') != null && request('wallet') != 'all') {
                     $wallet = Wallet::where([['id', request('wallet')], ['user_id', $user->id]])->firstOrFail();
                     $defaultWallet_transactions = $wallet->transactionsFrom()->with('category', 'toWallet', 'fromWallet')
+                        ->whereNull('parent_id')
                         ->whereYear('date', $current_year)->whereMonth('date', date('m', strtotime($current_month)))
                         ->get()
                         ->merge($wallet->transactionsTo()->with('category', 'toWallet', 'fromWallet')
+                            ->whereNull('parent_id')
                             ->whereYear('date', $current_year)
                             ->whereMonth('date', date('m', strtotime($current_month)))
                             ->get())
@@ -108,6 +110,7 @@ class DashboardController extends Controller
                     $defaultWallet = $wallet;
                 } else {
                     $defaultWallet_transactions = $user->transactions()->with('category', 'toWallet', 'fromWallet')
+                        ->whereNull('parent_id')
                         ->where(function ($query) use ($defaultCurrency) {
                             $query->whereHas('toWallet', function ($query) use ($defaultCurrency) {
                                 $query->where('currency', $defaultCurrency);
@@ -130,7 +133,6 @@ class DashboardController extends Controller
                 $page = request('page', 1);
                 $perPage = 5;
                 $offset = ($page * $perPage) - $perPage;
-
                 $paginator = new LengthAwarePaginator(
                     array_slice($defaultWallet_transactions->toArray(), $offset, $perPage, true),
                     count($defaultWallet_transactions),
@@ -308,10 +310,6 @@ class DashboardController extends Controller
                 foreach ($periods as $period) {
                     $expenses = $this->calculateTotal(clone $userTransactions, $period, $year, 'amountOut');
                     $incomes = $this->calculateTotal(clone $userTransactions, $period, $year, 'amountIn');
-                    // if ($expenses == 0 && $incomes == 0) {
-                    //     $periods = array_diff($periods, [$period]);
-                    //     continue;
-                    // }
                     $total_expenses_array[] = $expenses;
                     $total_incomes_array[] = $incomes;
                 }
@@ -322,15 +320,12 @@ class DashboardController extends Controller
 
                 $chart_option = "This Year";
             } else {
+                $internal_transfer_category = Category::where('name', Category::DEFAULT_CATEGORIES['internal_transfer']['name'])->first();
                 foreach ($periods as $period) {
                     $transactions_expenses = clone $userTransactions;
                     $transactions_incomes = clone $userTransactions;
-                    $expenses = $transactions_expenses->where('date', '>=', $period)->where('date', '<=', date('Y-m-d', strtotime($period . ' +1 day')))->where('amountOut', '>', 0)->sum('amountOut');
-                    $incomes = $transactions_incomes->where('date', '>=', $period)->where('date', '<=', date('Y-m-d', strtotime($period . ' +1 day')))->where('amountIn', '>', 0)->sum('amountIn');
-                    // if ($expenses == 0 && $incomes == 0) {
-                    //     $periods = array_diff($periods, [$period]);
-                    //     continue;
-                    // }
+                    $expenses = $transactions_expenses->where('category_id', '!=', $internal_transfer_category->id)->where('date', '>=', $period)->where('date', '<=', date('Y-m-d', strtotime($period . ' +1 day')))->where('amountOut', '>', 0)->sum('amountOut');
+                    $incomes = $transactions_incomes->where('category_id', '!=', $internal_transfer_category->id)->where('date', '>=', $period)->where('date', '<=', date('Y-m-d', strtotime($period . ' +1 day')))->where('amountIn', '>', 0)->sum('amountIn');
                     $total_expenses_array[] = $expenses;
                     $total_incomes_array[] = $incomes;
                 }

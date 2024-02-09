@@ -51,15 +51,17 @@ class TransactionController extends Controller
                 $wallet->save();
             } elseif ($request->transaction_type == 'internal_transfer') {
                 $internalTransferCategory = Category::where('name', Category::DEFAULT_CATEGORIES['internal_transfer']['name'])->first();
-                $transaction = $this->createTransaction($request, $request->amount, $request->amount, $request->wallet_id, $request->to_wallet, $internalTransferCategory->id, null, $request->description, $date);
+                $toWallet = $request->user()->wallets()->find($request->to_wallet);
+                $transaction = $this->createTransaction($request, $request->amount, $request->amount, $request->wallet_id, $request->to_wallet, $internalTransferCategory->id, null, $request->description ?? "Internal transfer from " . $wallet->name . " to " . $toWallet->name . " wallet", $date);
                 if ($request->fee) {
                     $feeCategory = Category::where('name', Category::DEFAULT_CATEGORIES['fees']['name'])->first();
-                    $this->createTransaction($request, null, $request->fee, $request->wallet_id, null, $feeCategory->id, $transaction->id, 'Transfer fee', $date);
+                    $fee = $this->createTransaction($request, null, $request->fee, $request->wallet_id, null, $feeCategory->id, $transaction->id, 'Transfer fee', $date);
                     $wallet->balance -= $request->amount + $request->fee;
+                    $transaction->child_id = $fee->id;
+                    $transaction->save();
                 } else {
                     $wallet->balance -= $request->amount;
                 }
-                $toWallet = $request->user()->wallets()->find($request->to_wallet);
                 $toWallet->balance += $request->amount;
                 $toWallet->save();
                 $wallet->save();
