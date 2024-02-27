@@ -19,25 +19,8 @@
             <span class="greetings text-xl"></span>{{ Auth::user()->name }}
         </span>
         @if (Auth::user()->wallets->count() >= 1)
-        <div class="flex gap-4">
-            <div class="flex justify-center items-center gap-2">
-                <a id="prev_month" class="cursor-pointer bg-primaryLight dark:bg-primaryDark p-1 rounded-md">
-                    <i class="fa-solid fa-chevron-left text-gray-700 dark:text-gray-200 text-sm"></i>
-                </a>
-                <select id="current_month"
-                    class="p-2 rounded-lg bg-primaryLight dark:bg-primaryDark text-md text-primaryDark dark:text-primaryLight">
-                    @for ($i = 1; $i <= 12; $i++) @php $monthName=date('M', mktime(0, 0, 0, $i, 10)); @endphp <option
-                        value="{{ $monthName }}" {{ $monthName==$current_month ? 'selected' : '' }}>
-                        {{ $monthName }}
-                        </option>
-                        @endfor
-                </select>
-                <input type="number" id="current_year"
-                    class="p-2 rounded-lg bg-primaryLight dark:bg-primaryDark text-md text-primaryDark dark:text-primaryLight"
-                    value="{{ $current_year }}" min="2000" max="2100">
-                <a id="next_month" class="cursor-pointer bg-primaryLight dark:bg-primaryDark p-1 rounded-md">
-                    <i class="fa-solid fa-chevron-right text-gray-700 dark:text-gray-200 text-sm"></i>
-                </a>
+        <div class="flex justify-center items-center gap-2 flex-wrap">
+            <div>
                 {{-- Go to current --}}
                 @if ($current_month != date('M') || $current_year != date('Y'))
                 <x-primary-button id="go_to_current_month" class="h-full" type="button"
@@ -50,17 +33,34 @@
                     <div class="tooltip-arrow" data-popper-arrow></div>
                 </div>
                 @endif
-                <select id="currencies_filter"
-                    class="p-2 rounded-lg bg-primaryLight dark:bg-primaryDark text-md text-primaryDark dark:text-primaryLight">
-                    @foreach ($userCurrencies as $currency)
-                    <option value="{{$currency}}" @if($currency==request()->query('currency') || $currency ==
-                        $defaultCurrency) selected
-                        @endif>
-                        {{$currency}}
-                    </option>
-                    @endforeach
+                <a id="prev_month" class="cursor-pointer bg-primaryLight dark:bg-primaryDark p-1 rounded-md">
+                    <i class="fa-solid fa-chevron-left text-gray-700 dark:text-gray-200 text-sm"></i>
+                </a>
+                <select id="current_month"
+                    class="w-20 p-2 rounded-lg bg-primaryLight dark:bg-primaryDark text-md text-primaryDark dark:text-primaryLight">
+                    @for ($i = 1; $i <= 12; $i++) @php $monthName=date('M', mktime(0, 0, 0, $i, 10)); @endphp <option
+                        value="{{ $monthName }}" {{ $monthName==$current_month ? 'selected' : '' }}>
+                        {{ $monthName }}
+                        </option>
+                        @endfor
                 </select>
+                <input type="number" id="current_year"
+                    class="w-20 p-2 rounded-lg bg-primaryLight dark:bg-primaryDark text-md text-primaryDark dark:text-primaryLight"
+                    value="{{ $current_year }}" min="2000" max="2100">
+                <a id="next_month" class="cursor-pointer bg-primaryLight dark:bg-primaryDark p-1 rounded-md">
+                    <i class="fa-solid fa-chevron-right text-gray-700 dark:text-gray-200 text-sm"></i>
+                </a>
             </div>
+            <select id="currencies_filter"
+                class="w-20 p-2 rounded-lg bg-primaryLight dark:bg-primaryDark text-md text-primaryDark dark:text-primaryLight">
+                @foreach ($userCurrencies as $currency)
+                <option value="{{$currency}}" @if($currency==request()->query('currency') || $currency ==
+                    $defaultCurrency) selected
+                    @endif>
+                    {{$currency}}
+                </option>
+                @endforeach
+            </select>
         </div>
         @endif
     </div>
@@ -334,7 +334,7 @@
                 @if ($chartData)
                 <div class="bg-white dark:bg-gray-900 rounded-lg shadow p-4 md:p-6">
                     <div class="flex justify-between mb-5">
-                        <div class="grid gap-4 grid-cols-2">
+                        <div class="grid gap-1 grid-cols-2">
                             <div>
                                 <h5
                                     class="inline-flex items-center text-gray-500 dark:text-gray-400 leading-none font-normal mb-2">
@@ -360,7 +360,7 @@
                                         <div data-popper-arrow></div>
                                     </div>
                                 </h5>
-                                <p class="text-gray-900 dark:text-white text-lg leading-none font-bold">
+                                <p class="text-gray-900 dark:text-white text-sm leading-none font-bold">
                                     {{$chartData['total_expenses']}}
                                 </p>
                             </div>
@@ -389,7 +389,7 @@
                                         <div data-popper-arrow></div>
                                     </div>
                                 </h5>
-                                <p class="text-gray-900 dark:text-white text-lg leading-none font-bold">
+                                <p class="text-gray-900 dark:text-white text-sm leading-none font-bold">
                                     {{$chartData['total_incomes']}}
                                 </p>
                             </div>
@@ -397,7 +397,7 @@
                         <div>
                             <button id="dropdownDefaultButton" data-dropdown-toggle="lastDaysdropdown"
                                 data-dropdown-placement="bottom" type="button"
-                                class="px-3 py-2 inline-flex items-center text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+                                class="p-2 inline-flex items-center text-xs font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
                                 {{$chartData['chart_option']}}
                                 <svg class="w-2.5 h-2.5 ms-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
                                     fill="none" viewBox="0 0 10 6">
@@ -407,7 +407,7 @@
                             </button>
                             <div id="lastDaysdropdown"
                                 class="z-10 hidden bg-white divide-y divide-gray-100 rounded-lg shadow w-44 dark:bg-gray-700">
-                                <ul class="py-2 text-sm text-gray-700 dark:text-gray-200"
+                                <ul class="py-2 text-xs text-gray-700 dark:text-gray-200"
                                     aria-labelledby="dropdownDefaultButton">
                                     <li>
                                         <a data-chart-option="01"
@@ -447,115 +447,12 @@
                     </div>
                     <div id="line-chart"></div>
                 </div>
-                <script>
-                    window.addEventListener("load", function() {
-                        let options = {
-                            chart: {
-                                height: "100%",
-                                maxWidth: "100%",
-                                type: "line",
-                                fontFamily: " 'Poppins', sans-serif",
-                                dropShadow: {
-                                    enabled: false,
-                                },
-                                toolbar: {
-                                    show: false,
-                                },
-                            },
-                            tooltip: {
-                                enabled: true,
-                                x: {
-                                    show: false,
-                                },
-                            },
-                            dataLabels: {
-                                enabled: false,
-                            },
-                            stroke: {
-                                width: 6,
-                            },
-                            grid: {
-                                show: true,
-                                strokeDashArray: 4,
-                                padding: {
-                                    left: 0,
-                                    right: 0,
-                                    top: 0,
-                                    bottom: 0
-                                },
-                            },
-                            series: [
-                                {
-                                    name: "Expenses",
-                                    data: @json($chartData['total_expenses_array']),
-                                    color: "#F87171",
-                                },
-                                {
-                                    name: "Incomes",
-                                    data: @json($chartData['total_incomes_array']),
-                                    color: "#34D399",
-                                },
-                            ],
-                            legend: {
-                                show: false
-                            },
-                            stroke: {
-                                curve: 'smooth'
-                            },
-                            xaxis: {
-                                type: @json(request()->query('chart-option')) != "all-year" ? 'datetime' : '',
-                                categories: @json($chartData['periods']),
-                                labels: {
-                                    show: true,
-                                    style: {
-                                        fontFamily: 'Poppins',
-                                        cssClass: 'text-xs font-normal fill-gray-500 dark:fill-gray-400'
-                                    },
-                                    rotate: -90,
-                                    formatter: function (value, timestamp) {
-                                        if (@json(request()->query('chart-option')) != "all-year"){
-                                            return new Date(timestamp).toLocaleDateString('en-GB', {
-                                                day: 'numeric',
-                                                month: 'short'
-                                            });
-                                        }else{
-                                            return new Date(value).toLocaleDateString('en-GB', {
-                                                month: 'short'
-                                            });
-                                        }
-                                    }, 
-                                },
-                                axisBorder: {
-                                    show: false,
-                                },
-                                axisTicks: {
-                                    show: false,
-                                },
-                            },
-                            yaxis: {
-                                labels: {
-                                    formatter: function (value) {
-                                        if (value >= 1000000000) {
-                                            return "{{$defaultCurrency}} " + (value / 1000000000).toFixed(1) + 'B';
-                                        }else if (value >= 1000000) {
-                                            return "{{$defaultCurrency}} " + (value / 1000000).toFixed(1) + 'M';
-                                        }else if (value >= 1000) {
-                                            return "{{$defaultCurrency}} " + (value / 1000).toFixed(0) + 'K';
-                                        }else {
-                                            return "{{$defaultCurrency}} " + value;
-                                        }
-                                    },
-                                    padding: 4,
-                                },
-                                show: true,
-                            },
-                        }
-                        if (document.getElementById("line-chart") && typeof ApexCharts !== 'undefined') {
-                            const chart = new ApexCharts(document.getElementById("line-chart"), options);
-                            chart.render();
-                        }
-                    });
-                </script>
+                <div id="chartData" data-total-expenses-array=@json($chartData['total_expenses_array'])
+                    data-total-incomes-array=@json($chartData['total_incomes_array'])
+                    data-periods="{{ json_encode($chartData['periods'], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) }}"
+                    data-chart-option=@json(request()->query('chart-option'))
+                    data-default-currency={{$defaultCurrency}} style="display: none;">
+                </div>
                 @else
                 <x-alert-session-status color="gray" id="no_statistics_alert"
                     message="No statistics found yet, or you don't have any wallets yet" />

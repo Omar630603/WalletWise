@@ -195,57 +195,208 @@ $(document).ready(function () {
             "&chart-option=" +
             chartOption;
     }
-});
 
-function selectCategory(name, icon, id) {
-    $("#selectedCategory").text(name);
-    $("#categoryIcon").attr(
-        "class",
-        "fa-solid " + icon + " text-lg text-primaryDark dark:text-primaryLight"
-    );
-    $("#categoryDropdown").addClass("hidden");
-    $("#category").val(id);
-}
-
-$(document).on("click", function (event) {
-    var $categoryDropdown = $("#categoryDropdown");
-    var $selectedCategory = $("#selectedCategory");
-    if (
-        !$categoryDropdown.is(event.target) &&
-        !$selectedCategory.is(event.target) &&
-        $categoryDropdown.has(event.target).length === 0
-    ) {
-        $categoryDropdown.addClass("hidden");
+    function selectCategory(name, icon, id) {
+        $("#selectedCategory").text(name);
+        $("#categoryIcon").attr(
+            "class",
+            "fa-solid " +
+                icon +
+                " text-lg text-primaryDark dark:text-primaryLight"
+        );
+        $("#categoryDropdown").addClass("hidden");
+        $("#category").val(id);
     }
-});
 
-$("#selectedCategory").on("click", function () {
-    $("#categoryDropdown").toggleClass("hidden");
-});
+    $(document).on("click", function (event) {
+        var $categoryDropdown = $("#categoryDropdown");
+        var $selectedCategory = $("#selectedCategory");
+        if (
+            !$categoryDropdown.is(event.target) &&
+            !$selectedCategory.is(event.target) &&
+            $categoryDropdown.has(event.target).length === 0
+        ) {
+            $categoryDropdown.addClass("hidden");
+        }
+    });
 
-let $transactionType = $("#transaction_type");
-let $categoryInput = $("#expense_income_category_input");
-let $borrowLendInput = $("#borrow_lend_input");
-let $internalTransferInput = $("#internal_transfer_input");
+    $("#selectedCategory").on("click", function () {
+        $("#categoryDropdown").toggleClass("hidden");
+    });
 
-$transactionType.on("change", function () {
+    let $transactionType = $("#transaction_type");
+    let $categoryInput = $("#expense_income_category_input");
+    let $borrowLendInput = $("#borrow_lend_input");
+    let $internalTransferInput = $("#internal_transfer_input");
+
+    $transactionType.on("change", function () {
+        if (
+            $transactionType.val() === "expense" ||
+            $transactionType.val() === "income"
+        ) {
+            $categoryInput.removeClass("hidden");
+            $borrowLendInput.addClass("hidden");
+            $internalTransferInput.addClass("hidden");
+        } else if (
+            $transactionType.val() === "borrow" ||
+            $transactionType.val() === "lend"
+        ) {
+            $categoryInput.addClass("hidden");
+            $borrowLendInput.removeClass("hidden");
+            $internalTransferInput.addClass("hidden");
+        } else if ($transactionType.val() === "internal_transfer") {
+            $categoryInput.addClass("hidden");
+            $borrowLendInput.addClass("hidden");
+            $internalTransferInput.removeClass("hidden");
+        }
+    });
+
+    let chartDataDiv = document.getElementById("chartData");
+    let totalExpensesArray = JSON.parse(
+        chartDataDiv.dataset.totalExpensesArray
+    );
+    let totalIncomesArray = JSON.parse(chartDataDiv.dataset.totalIncomesArray);
+    let periods = JSON.parse(chartDataDiv.dataset.periods);
+    let chartOption = chartDataDiv.dataset.chartOption;
+    let defaultCurrency = chartDataDiv.dataset.defaultCurrency;
+    let colors = [];
+    for (let i = 0; i < periods.length; i++) {
+        colors.push("#9E9E9E");
+    }
+
+    let options = {
+        chart: {
+            height: "100%",
+            maxWidth: "100%",
+            type: "line",
+            fontFamily: " 'Poppins', sans-serif",
+            dropShadow: {
+                enabled: false,
+            },
+            toolbar: {
+                show: false,
+            },
+        },
+        tooltip: {
+            enabled: true,
+            x: {
+                show: false,
+            },
+        },
+        dataLabels: {
+            enabled: false,
+        },
+        stroke: {
+            width: 6,
+        },
+        grid: {
+            show: true,
+            strokeDashArray: 4,
+            padding: {
+                left: 0,
+                right: 0,
+                top: 0,
+                bottom: 0,
+            },
+        },
+        series: [
+            {
+                name: "Expenses",
+                data: totalExpensesArray,
+                color: "#F87171",
+            },
+            {
+                name: "Incomes",
+                data: totalIncomesArray,
+                color: "#34D399",
+            },
+        ],
+        legend: {
+            show: false,
+        },
+        stroke: {
+            curve: "smooth",
+        },
+        xaxis: {
+            type: chartOption != "all-year" ? "datetime" : "",
+            categories: periods,
+            labels: {
+                show: true,
+                style: {
+                    fontFamily: "Poppins",
+                    cssClass: "text-xs",
+                    colors: colors,
+                },
+                rotate: -45,
+                rotateAlways: false,
+                showDuplicates: false,
+                formatter: function (value, timestamp) {
+                    if (chartOption != "all-year") {
+                        return new Date(timestamp).toLocaleDateString("en-GB", {
+                            day: "numeric",
+                            month: "short",
+                        });
+                    } else {
+                        return new Date(value).toLocaleDateString("en-GB", {
+                            month: "short",
+                        });
+                    }
+                },
+            },
+            axisBorder: {
+                show: false,
+            },
+            axisTicks: {
+                show: false,
+            },
+        },
+        yaxis: {
+            labels: {
+                formatter: function (value) {
+                    if (value >= 1000000000) {
+                        return (
+                            defaultCurrency +
+                            " " +
+                            (value / 1000000000).toFixed(1) +
+                            "B"
+                        );
+                    } else if (value >= 1000000) {
+                        return (
+                            defaultCurrency +
+                            " " +
+                            (value / 1000000).toFixed(1) +
+                            "M"
+                        );
+                    } else if (value >= 1000) {
+                        return (
+                            defaultCurrency +
+                            " " +
+                            (value / 1000).toFixed(0) +
+                            "K"
+                        );
+                    } else {
+                        return defaultCurrency + " " + value;
+                    }
+                },
+                padding: 4,
+                style: {
+                    fontFamily: "Poppins",
+                    cssClass: "text-xs",
+                    colors: colors,
+                },
+            },
+            show: true,
+        },
+    };
+
     if (
-        $transactionType.val() === "expense" ||
-        $transactionType.val() === "income"
+        document.getElementById("line-chart") &&
+        typeof ApexCharts !== "undefined"
     ) {
-        $categoryInput.removeClass("hidden");
-        $borrowLendInput.addClass("hidden");
-        $internalTransferInput.addClass("hidden");
-    } else if (
-        $transactionType.val() === "borrow" ||
-        $transactionType.val() === "lend"
-    ) {
-        $categoryInput.addClass("hidden");
-        $borrowLendInput.removeClass("hidden");
-        $internalTransferInput.addClass("hidden");
-    } else if ($transactionType.val() === "internal_transfer") {
-        $categoryInput.addClass("hidden");
-        $borrowLendInput.addClass("hidden");
-        $internalTransferInput.removeClass("hidden");
+        const chart = new ApexCharts(
+            document.getElementById("line-chart"),
+            options
+        );
+        chart.render();
     }
 });

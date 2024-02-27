@@ -19,7 +19,6 @@ return new class extends Migration
             $table->string('currency');
             $table->decimal('balance', 10, 2)->default(0);
             $table->decimal('minimum_balance', 10, 2)->default(0);
-            $table->decimal('maximum_balance', 10, 2)->default(0);
             $table->string('icon')->nullable();
             $table->timestamps();
         });

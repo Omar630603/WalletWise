@@ -13,6 +13,11 @@ use Illuminate\Validation\Rule;
 
 class WalletController extends Controller
 {
+    public function index(Request $request)
+    {
+        return view('wallets.index');
+    }
+
     public function store(Request $request)
     {
         DB::beginTransaction();

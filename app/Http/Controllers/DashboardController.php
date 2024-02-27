@@ -331,7 +331,7 @@ class DashboardController extends Controller
                 }
 
                 $periods = array_map(function ($periods) {
-                    return date('j M', strtotime($periods));
+                    return date('j M Y', strtotime($periods));
                 }, $periods);
 
                 $chart_option = $chart_option == "all-month" ? "This Month" : $this->ordinal((int) $chart_option) . " Week";

@@ -8,6 +8,11 @@ use Illuminate\Support\Facades\DB;
 
 class TransactionController extends Controller
 {
+    public function index(Request $request)
+    {
+        return view('transactions.index');
+    }
+
     public function store(Request $request)
     {
         DB::beginTransaction();
