@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Http\Requests\NewWalletRequest;
+use Illuminate\Pagination\LengthAwarePaginator;
 use App\Models\Category;
 use Illuminate\Support\Facades\Redirect;
 use Symfony\Component\Intl\Currencies;
@@ -15,7 +15,20 @@ class WalletController extends Controller
 {
     public function index(Request $request)
     {
-        return view('wallets.index');
+        $wallets = $request->user()->wallets;
+        $page = request('page', 1);
+        $perPage = 5;
+        $offset = ($page * $perPage) - $perPage;
+        $paginator = new LengthAwarePaginator(
+            array_slice($wallets->toArray(), $offset, $perPage, true),
+            count($wallets),
+            $perPage,
+            $page,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
+
+        $wallets = $paginator;
+        return view('wallets.index', compact('wallets'));
     }
 
     public function store(Request $request)
